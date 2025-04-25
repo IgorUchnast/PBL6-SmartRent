@@ -1,100 +1,126 @@
-from app import db
-from datetime import timedelta
+# app.py
+from datetime import datetime, timedelta
+from enum import Enum as PyEnum
+
+from flask import Flask, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager, create_access_token
+from sqlalchemy import CheckConstraint, UniqueConstraint
+from sqlalchemy.types import Numeric
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token
 
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["JWT_SECRET_KEY"] = "super-secret-change-me"
 
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True)
-    password_hash = db.Column(db.String)
-    name = db.Column(db.String(100))
+db = SQLAlchemy(app)
+jwt = JWTManager(app)
 
-    def set_password(self, password):
-        # Hash the password when setting it
+# ---------- Mixin z automatycznymi znacznikami czasu -------------------------
+class TimestampMixin(object):
+    created_at = db.Column(db.DateTime(timezone=True),
+                           default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime(timezone=True),
+                           default=datetime.utcnow,
+                           onupdate=datetime.utcnow, nullable=False)
+
+# ---------- Enums -> String + CheckConstraint --------------------------------
+class PropertyStatus(PyEnum):
+    FREE = "free"
+    RESERVED = "reserved"
+    UNAVAILABLE = "unavailable"
+
+class ReservationStatus(PyEnum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+
+# ---------- MODELE -----------------------------------------------------------
+class User(TimestampMixin, db.Model):
+    __tablename__ = "users"
+    id            = db.Column(db.Integer, primary_key=True)
+    email         = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.LargeBinary(60), nullable=False)
+    name          = db.Column(db.String(100), nullable=False)
+
+    # relacje
+    properties    = db.relationship("Property", back_populates="owner",
+                                    cascade="all, delete-orphan")
+    reservations  = db.relationship("Reservation", back_populates="guest",
+                                    cascade="all, delete-orphan")
+
+    # --- metody pomocnicze
+    def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
-        # Check if the provided password matches the stored hash
+    def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
 
-    def generate_jwt(self):
-        # Generate JWT token for the user that expires after 10 days
-        return create_access_token(identity=str(self.id), expires_delta=timedelta(days=10))
+    def generate_jwt(self) -> str:
+        return create_access_token(
+            identity=self.id,
+            expires_delta=timedelta(hours=1),
+            additional_claims={"email": self.email},
+        )
 
+class Property(TimestampMixin, db.Model):
+    __tablename__ = "properties"
+    id          = db.Column(db.Integer, primary_key=True)
+    owner_id    = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"),
+                            nullable=False)
+    status      = db.Column(db.String(12), nullable=False,
+                            default=PropertyStatus.FREE.value)
+    description = db.Column(db.String(500))
+    price       = db.Column(Numeric(10, 2), nullable=False)
 
-class Property(db.Model):
-    __tablename__ = 'properties'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))  # Whose property it is
-    status = db.Column(db.String(20), nullable=True, default='free')  # 'free', 'reserved', 'unavailable'
-    description = db.Column(db.String(500), nullable=True)
-    price = db.Column(db.Float)
+    __table_args__ = (
+        CheckConstraint(
+            f"status IN ('{PropertyStatus.FREE.value}', "
+            f"'{PropertyStatus.RESERVED.value}', "
+            f"'{PropertyStatus.UNAVAILABLE.value}')",
+            name="ck_property_status",
+        ),
+    )
 
+    owner        = db.relationship("User", back_populates="properties")
+    reservations = db.relationship("Reservation", back_populates="property_",
+                                   cascade="all, delete-orphan")
 
-class Reservation(db.Model):
-    __tablename__ = 'reservations'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))  # Who made the reservation
-    property_id = db.Column(db.Integer, db.ForeignKey('properties.id', ondelete='CASCADE'))  # Which property is reserved
-    start_date = db.Column(db.DateTime)
-    end_date = db.Column(db.DateTime)
-    status = db.Column(db.String(20), nullable=True, default='pending')  # 'pending', 'confirmed', 'cancelled'
-    # 'pending' - waiting for confirmation from the owner
-    # 'confirmed' - owner confirmed the reservation
-    # 'cancelled' - reservation was cancelled by either party
+class Reservation(TimestampMixin, db.Model):
+    __tablename__ = "reservations"
+    id          = db.Column(db.Integer, primary_key=True)
+    guest_id    = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"),
+                            nullable=False)
+    property_id = db.Column(db.Integer, db.ForeignKey("properties.id", ondelete="CASCADE"),
+                            nullable=False)
+    start_date  = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_date    = db.Column(db.DateTime(timezone=True),   nullable=False)
+    status      = db.Column(db.String(10), nullable=False,
+                            default=ReservationStatus.PENDING.value)
 
+    __table_args__ = (
+        CheckConstraint("end_date > start_date", name="ck_res_period"),
+        UniqueConstraint("property_id", "start_date", "end_date",
+                         name="uq_property_dates"),
+        CheckConstraint(
+            f"status IN ('{ReservationStatus.PENDING.value}', "
+            f"'{ReservationStatus.CONFIRMED.value}', "
+            f"'{ReservationStatus.CANCELLED.value}')",
+            name="ck_res_status",
+        ),
+    )
 
-class Billing(db.Model):
-    __tablename__ = 'billings'
-    id = db.Column(db.Integer, primary_key=True)
-    reservation_id = db.Column(db.Integer, db.ForeignKey('reservations.id', ondelete='CASCADE'))  # Which reservation is paid for
-    amount = db.Column(db.Float)
-    status = db.Column(db.String(20), nullable=True, default='pending')  # 'pending', 'completed', 'failed'
-    # 'pending' - payment is being processed
-    # 'completed' - payment was successful
-    # 'failed' - payment failed
+    guest     = db.relationship("User", back_populates="reservations")
+    property_ = db.relationship("Property", back_populates="reservations")
 
+# ---------- ENDPOINT testowy -------------------------------------------------
+@app.route("/ping")
+def ping():
+    return jsonify({"msg": "pong", "time": datetime.utcnow().isoformat()})
 
-class Review(db.Model):
-    __tablename__ = 'reviews'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))  # Who wrote the review
-    property_id = db.Column(db.Integer, db.ForeignKey('properties.id', ondelete='CASCADE'))  # Which property is being reviewed
-    rating = db.Column(db.Integer)  # Rating from 1 to 5
-    comment = db.Column(db.String(500), nullable=True)  # Review comment
-
-
-class Device(db.Model):
-    __tablename__ = 'devices'
-    id = db.Column(db.Integer, primary_key=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('properties.id', ondelete='CASCADE'))  # Which property the device belongs to
-
-
-class Sensor(Device):
-    __tablename__ = 'sensors'
-    type = db.Column(db.String(50))  # Type of sensor (e.g., temperature, humidity, etc.)
-    value = db.Column(db.Float)  # Current value of the sensor
-
-
-class SensorData(db.Model):
-    __tablename__ = 'sensor_data'
-    id = db.Column(db.Integer, primary_key=True)
-    sensor_id = db.Column(db.Integer, db.ForeignKey('sensors.id', ondelete='CASCADE'))  # Which sensor the data belongs to
-    timestamp = db.Column(db.DateTime)  # When the data was recorded
-    value = db.Column(db.Float)  # Value of the sensor at the given timestamp
-    # Additional fields can be added as needed for specific sensor types
-
-
-class Outlet(Device):
-    __tablename__ = 'outlets'
-    status = db.Column(db.String(20), default='off')  # 'on' or 'off'
-    power_consumption = db.Column(db.Float, default=0.0)  # Power consumption in watts
-
-
-class Lightbulb(Device):
-    __tablename__ = 'lightbulbs'
-    sensor_id = db.Column(db.Integer, db.ForeignKey('sensors.id', ondelete='CASCADE'))  # Which sensor the lightbulb is associated with
-    # brightness = db.Column(db.Integer, default=0)  # Brightness level (0-100)
-    status = db.Column(db.String(20), default='off')  # 'on' or 'off'
+# ---------- MAIN -------------------------------------------------------------
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()          # utworzenie struktury w app.db
+    app.run(debug=True)
