@@ -18,7 +18,7 @@ from sqlalchemy.types import LargeBinary, Numeric
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Assuming `db` is created in your Flask app and imported here
-from your_application.extensions import db  # adjust the import path as needed
+from .app import db  # adjust the import path as needed
 
 ###############################################################################
 # Mixins
