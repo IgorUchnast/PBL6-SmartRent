@@ -1,5 +1,5 @@
 import time
-import grovepi # type: ignore
+import grovepi  # type: ignore
 
 # Ports 
 light_sensor = 0    # A0
@@ -29,10 +29,13 @@ while True:
         if dark:
             if grovepi.digitalRead(pir_sensor):
                 grovepi.digitalWrite(led, 1)
+            else:
+                grovepi.digitalWrite(led, 0)
         else:
             grovepi.digitalWrite(led, 0)
 
         print("sensor_value = %d resistance = %.2f" %(sensor_value,  resistance))
+        print("movement detected" if grovepi.digitalRead(pir_sensor) else "no movement detected")
         time.sleep(.5)
 
     except IOError:

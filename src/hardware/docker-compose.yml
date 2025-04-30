@@ -1,0 +1,7 @@
+services:
+  hardware:
+    build:
+      context: .
+    container_name: hardware
+    devices:
+      - /dev/gpiomem
