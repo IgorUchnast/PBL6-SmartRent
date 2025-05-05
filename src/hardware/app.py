@@ -1,6 +1,8 @@
 import time
 import grovepi  # type: ignore
 import math
+import requests
+import os
 
 # Ports 
 LIGHT_SENSOR = 0    # A0
@@ -11,38 +13,65 @@ PIR_SENSOR = 7      # D7
 # Turn on LED once sensor exceeds threshold resistance
 THRESHOLD = 10
 
-grovepi.pinMode(LIGHT_SENSOR,"INPUT")
-grovepi.pinMode(LED_PIN,"OUTPUT")
-grovepi.pinMode(PIR_SENSOR,"INPUT")
+POST_URL = os.getenv("POST_URL")
+POST_INTERVAL = int(os.getenv("POST_INTERVAL", 5))  # Default to 5 seconds if not set
 
-def is_dark(sensor_value):
+grovepi.pinMode(LIGHT_SENSOR, "INPUT")
+grovepi.pinMode(LED_PIN, "OUTPUT")
+grovepi.pinMode(PIR_SENSOR, "INPUT")
+
+def is_dark(light_value):
     try:
-        resistance = (float)(1023 - sensor_value) * 10 / sensor_value  # kΩ
+        resistance = (float)(1023 - light_value) * 10 / light_value  # kΩ
     except ZeroDivisionError:
-        resistance = float('inf')  # Resistance is infinite if sensor_value is 0
+        resistance = float('inf')  # Resistance is infinite if light_value is 0
     return resistance > THRESHOLD, resistance
+
+last_post_time = 0
 
 while True:
     try:
         # Get sensor value
-        sensor_value = grovepi.analogRead(LIGHT_SENSOR)
-        dark, resistance = is_dark(sensor_value)
+        light_value = grovepi.analogRead(LIGHT_SENSOR)
+        dark, resistance = is_dark(light_value)
 
         [temp, humidity] = grovepi.dht(TEMP_HUM_SENSOR, 0)  # 0 for blue sensor
-        if math.isnan(temp) == False and math.isnan(humidity) == False:
-            print("temp = %.02f C humidity =%.02f%%"%(temp, humidity))
+        motion = grovepi.digitalRead(PIR_SENSOR)
 
-        if dark:
-            if grovepi.digitalRead(PIR_SENSOR):
-                grovepi.digitalWrite(LED_PIN, 1)
-            else:
-                grovepi.digitalWrite(LED_PIN, 0)
+        if math.isnan(temp) == False and math.isnan(humidity) == False:
+            print("temp = %.02f C humidity =%.02f%%" % (temp, humidity))
+
+        # LED handling
+        if dark and motion:
+            grovepi.digitalWrite(LED_PIN, 1)
         else:
             grovepi.digitalWrite(LED_PIN, 0)
 
-        print("sensor_value = %d resistance = %.2f" %(sensor_value,  resistance))
-        print("movement detected" if grovepi.digitalRead(PIR_SENSOR) else "no movement detected")
-        time.sleep(.5)
+        print("light_value = %d resistance = %.2f" % (light_value, resistance))
+        print("movement detected" if motion else "no movement detected")
 
-    except IOError:
-        print ("Error")
+        # Check if it's time to post data
+        current_time = time.time()
+        if current_time - last_post_time >= POST_INTERVAL:
+            # Send data to the server
+            data = {
+                "temperature": temp,
+                "humidity": humidity,
+                "light_sensor_value": light_value,
+                "light_sensor_resistance": resistance,
+                "is_dark": dark,
+                "motion_detected": bool(motion)
+            }
+
+            try:
+                response = requests.post(POST_URL, json=data)
+                print(f"POST status: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                print(f"POST error: {e}")
+
+            last_post_time = current_time
+
+        time.sleep(0.5)
+
+    except Exception as e:
+        print(f"Error: {e}")

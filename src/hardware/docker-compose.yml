@@ -1,7 +1,10 @@
 services:
-  hardware:
+  sensors:
     build:
       context: .
-    container_name: hardware
+    container_name: sensors
     devices:
       - /dev/gpiomem
+    environment:
+      - POST_URL=http://localhost:5000/post
+      - POST_INTERVAL=5
