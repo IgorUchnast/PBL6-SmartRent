@@ -4,17 +4,20 @@ import math
 import requests
 import os
 
-# Ports 
+# Ports
 LIGHT_SENSOR = 0    # A0
 TEMP_HUM_SENSOR = 2 # D2
 LED_PIN = 4         # D4
 PIR_SENSOR = 7      # D7
 
-# Turn on LED once sensor exceeds threshold resistance
+# Threshold for light resistance (kΩ)
 THRESHOLD = 10
 
 POST_URL = os.getenv("POST_URL", False)
-POST_INTERVAL = int(os.getenv("POST_INTERVAL", 5))  # Default to 5 seconds if not set
+POST_INTERVAL = int(os.getenv("POST_INTERVAL", 5))  # Default 5s
+
+# Global override flag for LED control
+external_led_override = None  # None = automatic, True = forced on, False = forced off
 
 grovepi.pinMode(LIGHT_SENSOR, "INPUT")
 grovepi.pinMode(LED_PIN, "OUTPUT")
@@ -33,22 +36,15 @@ def sensor_loop():
 
     while True:
         try:
-            # Get sensor value
             light_value = grovepi.analogRead(LIGHT_SENSOR)
             dark, resistance = is_dark(light_value)
             [temp, humidity] = grovepi.dht(TEMP_HUM_SENSOR, 0)  # 0 for blue sensor
             motion = grovepi.digitalRead(PIR_SENSOR)
 
-            if math.isnan(temp) == False and math.isnan(humidity) == False:
-                print("temp = %.02f C humidity =%.02f%%" % (temp, humidity))
+            if not math.isnan(temp) and not math.isnan(humidity):
+                print(f"temp = {temp:.2f} C humidity = {humidity:.2f}%")
 
-            # LED handling
-            if dark and motion:
-                grovepi.digitalWrite(LED_PIN, 1)
-            else:
-                grovepi.digitalWrite(LED_PIN, 0)
-
-            # Manual LED control
+            # LED logic
             if external_led_override is True:
                 grovepi.digitalWrite(LED_PIN, 1)
             elif external_led_override is False:
@@ -57,7 +53,7 @@ def sensor_loop():
                 # Automatic control based on light and motion
                 grovepi.digitalWrite(LED_PIN, 1 if dark and motion else 0)
 
-            print("light_value = %d resistance = %.2f" % (light_value, resistance))
+            print(f"light_value = {light_value} resistance = {resistance:.2f}")
             print("movement detected" if motion else "no movement detected")
 
             # If POST_URL is set, send data to the server
@@ -65,7 +61,6 @@ def sensor_loop():
                 # Check if it's time to post data
                 current_time = time.time()
                 if current_time - last_post_time >= POST_INTERVAL:
-                    # Send data to the server
                     data = {
                         "temperature": temp,
                         "humidity": humidity,
@@ -74,13 +69,11 @@ def sensor_loop():
                         "is_dark": dark,
                         "motion_detected": bool(motion)
                     }
-
                     try:
                         response = requests.post(POST_URL, json=data)
                         print(f"POST status: {response.status_code}")
                     except requests.exceptions.RequestException as e:
                         print(f"POST error: {e}")
-
                     last_post_time = current_time
 
             time.sleep(0.5)

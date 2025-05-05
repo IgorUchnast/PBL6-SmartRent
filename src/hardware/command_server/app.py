@@ -1,17 +1,16 @@
 import requests
+import time
 
-# Local address to container A (in the same Docker network)
-TARGET_URL = "http://sensor_server:5000/led"
+URL = "http://sensor_server:5000/led"
+MAX_RETRIES = 10
 
-def send_command(cmd):
-    response = requests.post(TARGET_URL, json={"command": cmd})
-    print(response.status_code, response.json())
-
-# Example usage: turn on the LED
-send_command("on")
-
-# Turn off the LED
-# send_command("off")
-
-# Set to automatic mode
-# send_command("auto")
+for attempt in range(MAX_RETRIES):
+    try:
+        response = requests.post(URL, json={"command": "on"})
+        print(f"Connected: {response.status_code}")
+        break
+    except requests.exceptions.ConnectionError as e:
+        print(f"Connection failed (attempt {attempt+1}), retrying in 2s...")
+        time.sleep(2)
+else:
+    print("Sensor server not responding after multiple attempts.")

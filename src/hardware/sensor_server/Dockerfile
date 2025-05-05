@@ -1,4 +1,4 @@
-FROM arm32v7/python:slim
+FROM arm32v7/python:3.9-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install -y \
 RUN pip install -i https://www.piwheels.org/simple \
     numpy==1.21.4 \
     python-periphery \
-    wiringpi
+    wiringpi \
+    flask \
+    requests
 
 # Set working directory
 WORKDIR /home/pi/app
@@ -29,7 +31,7 @@ RUN git clone https://github.com/DexterInd/GrovePi.git && \
     rm -rf GrovePi RFR_Tools
 
 # Copy your application file(s) from host
-COPY app.py .
+COPY . .
 
 # Run the script
 CMD ["python3", "-u", "app.py"]
