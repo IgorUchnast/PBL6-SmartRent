@@ -7,6 +7,7 @@ services:
       - /dev/gpiomem
     environment:
       - POST_INTERVAL=5
+      - DHT_INTERVAL=3
   upload_server:
     build:
       context: ./upload_server
@@ -14,7 +15,7 @@ services:
     depends_on:
       - sensor_server
     environment:
-      # - POST_URL=http://localhost:5000/post  # comment to be offline
+      - POST_URL=http://localhost:5000/post  # comment to be offline
   download_server:
     build:
       context: ./download_server

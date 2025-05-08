@@ -6,7 +6,7 @@ MAX_RETRIES = 10
 
 for attempt in range(MAX_RETRIES):
     try:
-        response = requests.post(URL, json={"command": "on"})
+        response = requests.post(URL, json={"command": "auto"})
         print(f"Connected: {response.status_code}")
         break
     except requests.exceptions.ConnectionError as e:
