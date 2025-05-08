@@ -6,13 +6,20 @@ services:
     devices:
       - /dev/gpiomem
     environment:
-      # - POST_URL=http://localhost:5000/post  # comment to be offline
       - POST_INTERVAL=5
-    ports:
-      - "5000:5000"
-  command_server:
+  upload_server:
     build:
-      context: ./command_server
-    container_name: command_server
+      context: ./upload_server
+    container_name: upload_server
     depends_on:
       - sensor_server
+    environment:
+      # - POST_URL=http://localhost:5000/post  # comment to be offline
+  download_server:
+    build:
+      context: ./download_server
+    container_name: download_server
+    depends_on:
+      - sensor_server
+    ports:
+      - "5000:5000"

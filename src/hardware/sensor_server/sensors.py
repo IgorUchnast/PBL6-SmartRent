@@ -13,7 +13,7 @@ PIR_SENSOR = 7      # D7
 # Threshold for light resistance (kΩ)
 THRESHOLD = 10
 
-POST_URL = os.getenv("POST_URL", False)
+POST_URL = "http://post_server:5000/data"  # URL of the post server
 POST_INTERVAL = int(os.getenv("POST_INTERVAL", 5))  # Default 5s
 
 # Global override flag for LED control
@@ -56,25 +56,23 @@ def sensor_loop():
             print(f"light_value = {light_value} resistance = {resistance:.2f}")
             print("movement detected" if motion else "no movement detected")
 
-            # If POST_URL is set, send data to the server
-            if POST_URL:
-                # Check if it's time to post data
-                current_time = time.time()
-                if current_time - last_post_time >= POST_INTERVAL:
-                    data = {
-                        "temperature": temp,
-                        "humidity": humidity,
-                        "light_sensor_value": light_value,
-                        "light_sensor_resistance": resistance,
-                        "is_dark": dark,
-                        "motion_detected": bool(motion)
-                    }
-                    try:
-                        response = requests.post(POST_URL, json=data)
-                        print(f"POST status: {response.status_code}")
-                    except requests.exceptions.RequestException as e:
-                        print(f"POST error: {e}")
-                    last_post_time = current_time
+            # Check if it's time to post data
+            current_time = time.time()
+            if current_time - last_post_time >= POST_INTERVAL:
+                data = {
+                    "temperature": temp,
+                    "humidity": humidity,
+                    "light_sensor_value": light_value,
+                    "light_sensor_resistance": resistance,
+                    "is_dark": dark,
+                    "motion_detected": bool(motion)
+                }
+                try:
+                    response = requests.post(POST_URL, json=data)
+                    print(f"POST status: {response.status_code}")
+                except requests.exceptions.RequestException as e:
+                    print(f"POST error: {e}")
+                last_post_time = current_time
 
             time.sleep(0.5)
 
