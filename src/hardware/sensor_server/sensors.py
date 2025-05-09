@@ -13,7 +13,7 @@ PIR_SENSOR = 7      # D7
 # Threshold for light resistance (kΩ)
 THRESHOLD = 10
 
-POST_URL = "http://upload_server:5000/data"  # URL of the post server
+POST_URL = "http://upload_server:5000/forward"  # URL of the post server
 POST_INTERVAL = int(os.getenv("POST_INTERVAL", 5))  # Default 5s
 DHT_INTERVAL = int(os.getenv("DHT_INTERVAL", 3))  # Default 3s
 

@@ -15,7 +15,7 @@ services:
     depends_on:
       - sensor_server
     environment:
-      - POST_URL=http://localhost:5000/post  # comment to be offline
+      - POST_URL=http://edge_uplink:5000/data  # Comment to be offline
   download_server:
     build:
       context: ./download_server

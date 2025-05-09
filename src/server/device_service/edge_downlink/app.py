@@ -6,8 +6,8 @@ POST_URL = os.getenv("POST_URL", False)
 
 app = Flask(__name__)
 
-@app.route("/forward", methods=["POST"])
-def forward_request():
+@app.route("/command", methods=["POST"])
+def send_command():
     data = request.get_json()
     # Only forward if POST_URL is set
     if POST_URL:

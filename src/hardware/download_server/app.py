@@ -1,16 +1,15 @@
+from flask import Flask, request, jsonify
 import requests
-import time
 
-URL = "http://sensor_server:5000/led"
-MAX_RETRIES = 10
+POST_URL = "http://sensor_server:5000/led"
 
-for attempt in range(MAX_RETRIES):
+app = Flask(__name__)
+
+@app.route('/forward', methods=['POST'])
+def forward_request():
+    data = request.get_json()
     try:
-        response = requests.post(URL, json={"command": "auto"})
-        print(f"Connected: {response.status_code}")
-        break
-    except requests.exceptions.ConnectionError as e:
-        print(f"Connection failed (attempt {attempt+1}), retrying in 2s...")
-        time.sleep(2)
-else:
-    print("Sensor server not responding after multiple attempts.")
+        response = requests.post(POST_URL, json=data)
+        return jsonify({"status": "success", "data": response.json()}), response.status_code
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
