@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, Response
 import requests
 
 POST_URL = "http://sensor_server:5000/led"
@@ -10,6 +10,11 @@ def forward_request():
     data = request.get_json()
     try:
         response = requests.post(POST_URL, json=data)
-        return jsonify({"status": "success", "data": response.json()}), response.status_code
+        return Response(response.content,
+                        status=response.status_code,
+                        content_type=response.headers.get('Content-Type', 'application/json'))
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return {"status": "error", "message": str(e)}, 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

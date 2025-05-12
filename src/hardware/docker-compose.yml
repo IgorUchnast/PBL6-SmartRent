@@ -22,5 +22,9 @@ services:
     container_name: download_server
     depends_on:
       - sensor_server
-    ports:
-      - "5000:5000"
+    # ports:
+    #   - "5000:5000"
+networks:
+  default:
+    external: true
+    name: shared-net
