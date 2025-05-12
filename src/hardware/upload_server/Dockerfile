@@ -1,8 +1,12 @@
 FROM python:alpine
 
 WORKDIR /app
-COPY . .
 
+# Install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "-u", "app.py"]
+# Copy all application files into the container
+COPY . .
+
+CMD [ "python", "-u", "app.py" ]

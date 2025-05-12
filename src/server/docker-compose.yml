@@ -1,13 +1,19 @@
 services:
   edge_uplink:
     build:
-      context: ./device_server/edge_uplink
+      context: ./device_service/edge_uplink
     container_name: edge_uplink
-    ports:
-      - "5000:5000"
+    # ports:
+    #   - "5000:5000"
   edge_downlink:
     build:
-      context: ./device_server/edge_downlink
+      context: ./device_service/edge_downlink
     container_name: edge_downlink
+    # ports:
+    #   - "5000:5000"
     environment:
       - POST_URL=http://download_server:5000/forward  # Comment to be offline
+networks:
+  default:
+    external: true
+    name: shared-net

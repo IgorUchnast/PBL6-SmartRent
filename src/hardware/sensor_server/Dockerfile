@@ -34,4 +34,4 @@ RUN git clone https://github.com/DexterInd/GrovePi.git && \
 COPY . .
 
 # Run the script
-CMD ["python3", "-u", "app.py"]
+CMD ["python", "-u", "app.py"]
