@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libatlas-base-dev \
     python3-pip \
     python3-setuptools \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install necessary Python packages
@@ -17,7 +18,8 @@ RUN pip install -i https://www.piwheels.org/simple \
     python-periphery \
     wiringpi \
     flask \
-    requests
+    requests && \
+    python -m pip install tinytuya
 
 # Set working directory
 WORKDIR /home/pi/app
