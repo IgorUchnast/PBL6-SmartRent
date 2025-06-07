@@ -3,7 +3,7 @@ import grovepi  # type: ignore
 import math
 import requests
 import os
-import tinytuya
+import tinytuya # type: ignore
 
 # Ports
 LIGHT_SENSOR = 0    # A0
