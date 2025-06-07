@@ -3,28 +3,37 @@ services:
     build:
       context: ./sensor_server
     container_name: sensor_server
+    network_mode: host
     devices:
       - /dev/gpiomem
     environment:
       - POST_INTERVAL=5
       - DHT_INTERVAL=3
+      - DEVICE_ID=bffad0217ab974c665liel
+      # - IP_ADDRESS=192.168.0.184  # Comment to auto-detect
+      - LOCAL_KEY=:A(fT}dG.Uu~fH8s
+    ports:
+      - "5000:5000"
   upload_server:
     build:
       context: ./upload_server
     container_name: upload_server
     depends_on:
       - sensor_server
+    ports:
+      - "5001:5000"
     environment:
-      - POST_URL=http://edge_uplink:5000/data  # Comment to be offline
+      - CONNECTION_STRING=${UPLINK_CONNECTION_STRING}
   download_server:
     build:
       context: ./download_server
     container_name: download_server
+    network_mode: host
     depends_on:
       - sensor_server
-    # ports:
-    #   - "5000:5000"
-networks:
-  default:
-    external: true
-    name: shared-net
+    environment:
+      - CONNECTION_STRING=${DOWNLINK_CONNECTION_STRING}
+# networks:
+#   default:
+#     external: true
+#     name: shared-net
