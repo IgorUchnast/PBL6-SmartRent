@@ -1,7 +1,9 @@
+version: "3.8"
+
 services:
   db:
     image: postgres:13
-    container_name: postgres
+    container_name: db
     restart: always
     environment:
       POSTGRES_DB: smartrent
@@ -14,10 +16,10 @@ services:
     networks:
       - default
 
-
   main_service:
     build:
-      context: ./  # lub . jeśli app.py jest w root `server/`
+      context: .
+      dockerfile: Dockerfile
     container_name: main_service
     ports:
       - "8000:8000"
@@ -25,9 +27,11 @@ services:
       - db
     networks:
       - default
+
   user_service:
     build:
       context: ./user_service
+      dockerfile: Dockerfile
     container_name: user_service
     ports:
       - "8001:8001"
@@ -39,9 +43,12 @@ services:
   report_service:
     build:
       context: ./report_service
+      dockerfile: Dockerfile
     container_name: report_service
     ports:
       - "8002:8002"
+    depends_on:
+      - main_service
     networks:
       - default
 
@@ -49,6 +56,8 @@ services:
     build:
       context: ./device_service/edge_uplink
     container_name: edge_uplink
+    networks:
+      - default
 
   edge_downlink:
     build:
@@ -56,11 +65,12 @@ services:
     container_name: edge_downlink
     environment:
       - POST_URL=http://download_server:5000/forward
+    networks:
+      - default
 
 volumes:
   pgdata:
 
 networks:
   default:
-    external: true
-    name: shared-net  # lub usuń to i użyj domyślnej sieci, jeśli jej nie masz
+    driver: bridge

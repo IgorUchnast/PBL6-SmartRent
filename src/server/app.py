@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_cors import CORS
 
 from extensions import db, jwt
-from models import Property, Reservation
+from models import Property, Reservation, Outlet
 
 app = Flask(__name__)
 
@@ -90,6 +90,24 @@ def get_user_reservations():
             "status": res.status
         } for res in reservations
     ]), 200
+
+@app.route("/outlets/<int:outlet_id>/status", methods=["GET"])
+def get_outlet_status(outlet_id):
+    outlet = Outlet.query.get(outlet_id)
+    if not outlet:
+        return jsonify({"error": "Outlet not found"}), 404
+    return jsonify({"status": outlet.status}), 200
+
+
+@app.route("/outlets/<int:outlet_id>/toggle", methods=["POST"])
+def toggle_outlet_status(outlet_id):
+    outlet = Outlet.query.get(outlet_id)
+    if not outlet:
+        return jsonify({"error": "Outlet not found"}), 404
+    outlet.status = "off" if outlet.status == "on" else "on"
+    db.session.commit()
+    return jsonify({"message": "Outlet status updated", "status": outlet.status}), 200
+
 
 
 if __name__ == '__main__':

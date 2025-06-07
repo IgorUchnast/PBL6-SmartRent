@@ -1,11 +1,14 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
-import 'package:smart_rent/api/property_service.dart' as propertyService;
+import 'package:provider/provider.dart';
+import 'package:smart_rent/api/auth_service.dart';
+import 'package:smart_rent/api/property_service.dart';
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/widgets/appbar/drawer.dart';
 import 'package:smart_rent/widgets/profile/profile_button.dart';
 import 'package:smart_rent/widgets/profile/profile_container.dart';
+import 'package:smart_rent/widgets/profile/profile_property_list.dart';
 import 'package:smart_rent/widgets/subtitle.dart';
 import 'package:smart_rent/widgets/title.dart';
 
@@ -15,6 +18,7 @@ class ProfilePage extends StatefulWidget {
     required this.token,
   });
   final String token;
+
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
@@ -28,16 +32,89 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  void _showAddPropertyDialog(String token) {
+    final _descriptionController = TextEditingController();
+    final _adressController = TextEditingController();
+    final _priceController = TextEditingController();
+    final _statusController = TextEditingController(text: 'Active');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Dodaj mieszkanie'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(labelText: 'Opis'),
+                ),
+                TextField(
+                  controller: _adressController,
+                  decoration: const InputDecoration(labelText: 'Adres'),
+                ),
+                TextField(
+                  controller: _priceController,
+                  decoration: const InputDecoration(labelText: 'Cena'),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: _statusController,
+                  decoration: const InputDecoration(labelText: 'Status'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Anuluj'),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+            ElevatedButton(
+              child: const Text('Zapisz'),
+              onPressed: () async {
+                final description = _descriptionController.text.trim();
+                final adress = _adressController.text.trim();
+                final price = double.tryParse(_priceController.text) ?? 0.0;
+                final status = _statusController.text.trim();
+
+                final result = await addProperty(
+                  token,
+                  description,
+                  price,
+                  status,
+                  adress,
+                );
+
+                Navigator.of(ctx).pop();
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text(result['message'] ?? result['error'] ?? 'Błąd'),
+                    ),
+                  );
+                  setState(() {}); // odśwież listę
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final token = Provider.of<AuthProvider>(context).token;
+
     return Scaffold(
       backgroundColor: SRAppColors.backgroundColor,
       appBar: AppBar(
         backgroundColor: SRAppColors.backgroundColor,
-        title: Text(
-          'Profile',
-          style: SRAppFonst.title,
-        ),
+        title: Text('Profile', style: SRAppFonst.title),
       ),
       drawer: SRDrawer(),
       body: Padding(
@@ -66,90 +143,15 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const Divider(),
             Expanded(
-              child: _buildView(currentView),
+              child: ProfilePropertyList(token: token),
             ),
           ],
         ),
       ),
-      floatingActionButton: ElevatedButton(
-        onPressed: () async {
-          final result = await propertyService.addProperty(
-            widget.token, // JWT token po zalogowaniu
-            "Nowe mieszkanie na wynajem",
-            120.0,
-          );
-
-          if (result['message'] == "Property added successfully") {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Dodano mieszkanie')),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(result['error'] ?? 'Błąd')),
-            );
-          }
-        },
-        child: Text("Dodaj mieszkanie"),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddPropertyDialog(token),
+        child: const Icon(Icons.add),
       ),
-    );
-  }
-
-  Widget _buildView(String type) {
-    switch (type) {
-      case 'active':
-        return _buildActiveApartments();
-      case 'history':
-        return _buildHistoryApartments();
-      default:
-        return const Center(child: Text("Wybierz kategorię powyżej"));
-    }
-  }
-
-  Widget _buildActiveApartments() {
-    return ListView(
-      children: const [
-        ListTile(
-            title: SRApartmentWidget(
-          apartmentCountry: 'Spain',
-          apartmentAddress:
-              'Carrer de Santa Fe de Nou Mèxic, s/n, Sarrià-Sant Gervasi, 08021 Barcelona',
-          apartmentStatus: 'Active',
-          apartmentOwner: 'IgorUchnast',
-        )),
-        ListTile(
-            title: SRApartmentWidget(
-          apartmentCountry: 'Portugal',
-          apartmentAddress:
-              'Carrer de Santa Fe de Nou Mèxic, s/n, Sarrià-Sant Gervasi, 08021 Lisboa',
-          apartmentStatus: 'Occupied',
-          apartmentOwner: 'IgorUchnast',
-        )),
-      ],
-    );
-  }
-
-  Widget _buildHistoryApartments() {
-    return ListView(
-      children: const [
-        ListTile(
-          title: SRApartmentWidget(
-            apartmentCountry: 'Greece',
-            apartmentAddress:
-                'Carrer de Santa Fe de Nou Mèxic, s/n, Sarrià-Sant Gervasi, 08021 Barcelona',
-            apartmentStatus: 'Active',
-            apartmentOwner: 'IgorUchnast',
-          ),
-        ),
-        ListTile(
-          title: SRApartmentWidget(
-            apartmentCountry: 'France',
-            apartmentAddress:
-                'Carrer de Santa Fe de Nou Mèxic, s/n, Sarrià-Sant Gervasi, 08021 Lisboa',
-            apartmentStatus: 'Occupied',
-            apartmentOwner: 'IgorUchnast',
-          ),
-        ),
-      ],
     );
   }
 }

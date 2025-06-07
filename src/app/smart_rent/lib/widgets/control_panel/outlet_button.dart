@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:smart_rent/widgets/control_panel/outlet_txt.dart';
 
 class SRPowerButtonScreen extends StatefulWidget {
@@ -26,16 +28,51 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
     );
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(_controller);
+
+    fetchOutletStatus(1).then((status) {
+      setState(() {
+        isOn = status == 'on';
+      });
+    });
   }
 
-  void _onTap() {
+  Future<String> fetchOutletStatus(int outletId) async {
+    final response = await http.get(
+      Uri.parse('http://localhost:8002/api/outlets/$outletId/status'),
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['status'];
+    } else {
+      throw Exception('Failed to fetch outlet status');
+    }
+  }
+
+  Future<void> toggleOutletStatus(int outletId) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:8002/api/outlets/$outletId/toggle'),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to toggle outlet');
+    }
+  }
+
+  void _onTap() async {
     if (_controller.status != AnimationStatus.completed) {
-      _controller.forward().then((_) {
-        _controller.reverse();
+      await _controller.forward();
+      await _controller.reverse();
+
+      try {
+        await toggleOutletStatus(1);
+        final newStatus = await fetchOutletStatus(1);
         setState(() {
-          isOn = !isOn;
+          isOn = newStatus == 'on';
         });
-      });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Błąd zmiany stanu gniazdka')),
+        );
+      }
     }
   }
 
@@ -76,13 +113,11 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
                     color: isOn ? Colors.white : Colors.black,
                   ),
                 ),
-                SizedBox(
-                  height: 20,
-                ),
-                Divider(),
+                const SizedBox(height: 20),
+                const Divider(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                  children: const [
                     SROutletText(
                       textData: 'Power',
                       sensorData: 20,

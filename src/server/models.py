@@ -27,6 +27,7 @@ class Property(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     status = db.Column(db.String(20), nullable=True, default='free')  # 'free', 'reserved', 'unavailable'
     description = db.Column(db.String(500), nullable=True)
+    adress = db.Column(db.String(500), nullable=True)
     price = db.Column(db.Float, nullable=True)
 
 
