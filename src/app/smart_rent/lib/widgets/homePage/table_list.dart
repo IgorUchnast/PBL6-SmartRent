@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 
@@ -18,28 +20,17 @@ class _ApiListPageState extends State<ApiListPage> {
     futureItems = fetchItemsFromApi();
   }
 
-  // 🧪 Symulowane API
   Future<List<Item>> fetchItemsFromApi() async {
-    await Future.delayed(const Duration(seconds: 2));
-    return [
-      Item(
-          name: 'Spain',
-          price: 59.99,
-          status: 'Active',
-          description: 'Les Corts, 08028 Barcelona, Hiszpania'),
-      Item(
-          name: 'Portugal',
-          price: 249.00,
-          status: 'Inactive',
-          description:
-              'Carrer del Vallespir, 194, Les Corts, 08014 Barcelona, Hiszpania'),
-      Item(
-          name: 'France',
-          price: 99.99,
-          status: 'Active',
-          description:
-              'Carrer del Vallespir, 194, Les Corts, 08014 Barcelona, Hiszpania'),
-    ];
+    final response = await http.get(
+      Uri.parse('http://localhost:8002/api/all-properties'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      return jsonList.map((item) => Item.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to load properties');
+    }
   }
 
   @override
@@ -52,7 +43,7 @@ class _ApiListPageState extends State<ApiListPage> {
         } else if (snapshot.hasError) {
           return Center(child: Text('Błąd: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('Brak danych'));
+          return const Center(child: Text('Brak dostępnych mieszkań'));
         }
 
         final items = snapshot.data!;
@@ -77,7 +68,7 @@ class _ApiListPageState extends State<ApiListPage> {
                   children: [
                     Divider(),
                     Text(
-                      'Price: \$${item.price.toStringAsFixed(2)}',
+                      'Cena: \$${item.price.toStringAsFixed(2)}',
                       style: SRAppFonst.darkTxt,
                     ),
                     Text(
@@ -85,7 +76,7 @@ class _ApiListPageState extends State<ApiListPage> {
                       style: SRAppFonst.darkTxt,
                     ),
                     Text(
-                      'Description: ${item.description}',
+                      'Opis: ${item.description}',
                       style: SRAppFonst.darkTxt,
                     ),
                   ],
@@ -111,4 +102,13 @@ class Item {
     required this.status,
     required this.description,
   });
+
+  factory Item.fromJson(Map<String, dynamic> json) {
+    return Item(
+      name: json['name'] ?? 'Brak nazwy',
+      price: (json['price'] as num).toDouble(),
+      status: json['status'],
+      description: json['description'],
+    );
+  }
 }

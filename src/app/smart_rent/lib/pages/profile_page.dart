@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:smart_rent/api/property_service.dart' as propertyService;
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/widgets/appbar/drawer.dart';
@@ -9,8 +10,11 @@ import 'package:smart_rent/widgets/subtitle.dart';
 import 'package:smart_rent/widgets/title.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
-
+  const ProfilePage({
+    super.key,
+    required this.token,
+  });
+  final String token;
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
@@ -66,6 +70,26 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: ElevatedButton(
+        onPressed: () async {
+          final result = await propertyService.addProperty(
+            widget.token, // JWT token po zalogowaniu
+            "Nowe mieszkanie na wynajem",
+            120.0,
+          );
+
+          if (result['message'] == "Property added successfully") {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Dodano mieszkanie')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(result['error'] ?? 'Błąd')),
+            );
+          }
+        },
+        child: Text("Dodaj mieszkanie"),
       ),
     );
   }

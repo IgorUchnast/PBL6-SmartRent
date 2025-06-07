@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:smart_rent/pages/home_page.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_rent/api/auth_service.dart';
+// import 'package:smart_rent/pages/login_page.dart';
+import 'package:smart_rent/pages/resgister_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -14,7 +24,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(),
-      home: const HomePage(),
+      home: RegisterPage(),
     );
   }
 }

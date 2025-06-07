@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_rent/api/auth_service.dart';
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/pages/apartment_page.dart';
@@ -6,6 +7,7 @@ import 'package:smart_rent/pages/home_page.dart';
 import 'package:smart_rent/pages/profile_page.dart';
 import 'package:smart_rent/pages/settings_page.dart';
 import 'package:smart_rent/widgets/subtitle.dart';
+import 'package:provider/provider.dart';
 
 class SRDrawer extends StatefulWidget {
   const SRDrawer({super.key});
@@ -17,6 +19,8 @@ class SRDrawer extends StatefulWidget {
 class _SRDrawerState extends State<SRDrawer> {
   @override
   Widget build(BuildContext context) {
+    final token = Provider.of<AuthProvider>(context).token;
+    // final userId = Provider.of<AuthProvider>(context).userId;
     return Drawer(
       child: Container(
         color: SRAppColors.backgroundColor,
@@ -68,7 +72,9 @@ class _SRDrawerState extends State<SRDrawer> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                  MaterialPageRoute(
+                    builder: (context) => ProfilePage(token: token),
+                  ),
                 );
               },
             ),

@@ -1,19 +1,66 @@
 services:
+  db:
+    image: postgres:13
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: smartrent
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+
+
+  main_service:
+    build:
+      context: ./  # lub . jeśli app.py jest w root `server/`
+    container_name: main_service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - default
+  user_service:
+    build:
+      context: ./user_service
+    container_name: user_service
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+    networks:
+      - default
+
+  report_service:
+    build:
+      context: ./report_service
+    container_name: report_service
+    ports:
+      - "8002:8002"
+    networks:
+      - default
+
   edge_uplink:
     build:
       context: ./device_service/edge_uplink
     container_name: edge_uplink
-    # ports:
-    #   - "5000:5000"
+
   edge_downlink:
     build:
       context: ./device_service/edge_downlink
     container_name: edge_downlink
-    # ports:
-    #   - "5000:5000"
     environment:
-      - POST_URL=http://download_server:5000/forward  # Comment to be offline
+      - POST_URL=http://download_server:5000/forward
+
+volumes:
+  pgdata:
+
 networks:
   default:
     external: true
-    name: shared-net
+    name: shared-net  # lub usuń to i użyj domyślnej sieci, jeśli jej nie masz
