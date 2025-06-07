@@ -1,32 +1,36 @@
-from flask import Flask, request, jsonify
-from azure.iot.device import IoTHubDeviceClient, Message # type: ignore
 import os
-import requests
+import json
+from azure.iot.device import IoTHubDeviceClient, Message  # type: ignore
+from flask import Flask, request, jsonify
 
-POST_URL = os.getenv("POST_URL", False)
-CONNECTION_STRING = os.getenv("CONNECTION_STRING", None)
+CONNECTION_STRING = os.getenv("CONNECTION_STRING")
+
+if not CONNECTION_STRING:
+    raise ValueError("Missing CONNECTION_STRING in environment variables")
 
 client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
 client.connect()
-
-msg = Message('{"temperature": 24.5}')
-client.send_message(msg)
 
 app = Flask(__name__)
 
 @app.route("/forward", methods=["POST"])
 def forward_request():
-    data = request.get_json()
-    # Only forward if POST_URL is set
-    if POST_URL:
-        try:
-            response = requests.post(POST_URL, json=data)
-            return jsonify({"status": "success", "data": response.json()}), response.status_code
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)}), 500
-    else:
-        print("Received data:", data)
-    return jsonify({"status": "received"}), 200
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
+
+        json_data = json.dumps(data)
+        message = Message(json_data)
+
+        client.send_message(message)
+
+        print("Message sent to IoTHub:", json_data)
+        return jsonify({"status": "success", "sent": data}), 200
+        
+    except Exception as e:
+        print("Error processing request:", e)
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
