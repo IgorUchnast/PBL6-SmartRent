@@ -22,8 +22,9 @@ services:
       - sensor_server
     ports:
       - "5001:5000"
-    # environment:
-    #   - POST_URL=http://edge_uplink:5000/data  # Comment to be offline
+    environment:
+      # - POST_URL=http://edge_uplink:5000/data  # Comment to be offline
+      - CONNECTION_STRING=HostName=pbl6-iothub.azure-devices.net;DeviceId=rpi-001;SharedAccessKey=63EGn5Ixr7dVc8WFlC3/Z9OMPoiRLPqhwwANrDbQeLg=
   download_server:
     build:
       context: ./download_server

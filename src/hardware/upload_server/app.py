@@ -1,8 +1,16 @@
 from flask import Flask, request, jsonify
+from azure.iot.device import IoTHubDeviceClient, Message # type: ignore
 import os
 import requests
 
 POST_URL = os.getenv("POST_URL", False)
+CONNECTION_STRING = os.getenv("CONNECTION_STRING", None)
+
+client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
+client.connect()
+
+msg = Message('{"temperature": 24.5}')
+client.send_message(msg)
 
 app = Flask(__name__)
 
