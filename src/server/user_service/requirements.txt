@@ -1,0 +1,6 @@
+Flask
+Flask-JWT-Extended
+Flask-SQLAlchemy
+Flask-CORS
+Werkzeug
+psycopg2-binary
