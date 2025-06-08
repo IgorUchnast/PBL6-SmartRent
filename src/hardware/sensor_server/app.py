@@ -20,6 +20,20 @@ def control_led():
 
     return jsonify({"status": "OK", "mode": cmd})
 
+@app.route('/outlet', methods=['POST'])
+def control_outlet():
+    data = request.get_json()
+    cmd = data.get("command")
+
+    if cmd == "on":
+        sensors.outlet.turn_on()
+    elif cmd == "off":
+        sensors.outlet.turn_off()
+    else:
+        return jsonify({"error": "Unknown command"}), 400
+
+    return jsonify({"status": "OK", "mode": cmd})
+
 # Start sensor loop in a background thread
 threading.Thread(target=sensors.sensor_loop, daemon=True).start()
 

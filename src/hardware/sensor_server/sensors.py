@@ -3,6 +3,7 @@ import grovepi  # type: ignore
 import math
 import requests
 import os
+import tinytuya # type: ignore
 
 # Ports
 LIGHT_SENSOR = 0    # A0
@@ -13,9 +14,19 @@ PIR_SENSOR = 7      # D7
 # Threshold for light resistance (kΩ)
 THRESHOLD = 10
 
-POST_URL = "http://upload_server:5000/forward"  # URL of the post server
+POST_URL = "http://localhost:5001/forward"  # URL of the post server
 POST_INTERVAL = int(os.getenv("POST_INTERVAL", 5))  # Default 5s
 DHT_INTERVAL = int(os.getenv("DHT_INTERVAL", 3))  # Default 3s
+
+# Initialize Tuya outlet
+DEVICE_ID = os.getenv("DEVICE_ID")
+IP_ADDRESS = os.getenv("IP_ADDRESS", "Auto")  # Default to 'Auto' for automatic IP detection
+LOCAL_KEY = os.getenv("LOCAL_KEY")
+outlet = tinytuya.OutletDevice(
+    dev_id=DEVICE_ID,
+    address=IP_ADDRESS,
+    local_key=LOCAL_KEY, 
+    version=3.3)
 
 # Global override flag for LED control
 external_led_override = None  # None = automatic, True = forced on, False = forced off
@@ -53,6 +64,21 @@ def sensor_loop():
             dark, resistance = is_dark(light_value)
             motion = grovepi.digitalRead(PIR_SENSOR)
 
+            outlet_data = outlet.status()
+            dps = outlet_data["dps"]
+            outlet_status = dps.get("1")    # True, False
+            voltage = dps.get("20") / 10    # V
+            current = dps.get("18") / 1000  # A
+            power = dps.get("19") / 10      # W
+            energy = dps.get("17") / 1000   # kWh
+
+            # print("\nPomiary energii:")
+            # print(f"Stan gniazdka: {outlet_status}")
+            # print(f"Napięcie: {voltage} V")
+            # print(f"Prąd: {current} mA")
+            # print(f"Moc: {power} W")
+            # print(f"Energia: {energy} kWh")
+
             # if not math.isnan(temp) and not math.isnan(humidity):
             #     print(f"temp = {temp:.2f} C humidity = {humidity:.2f}%")
 
@@ -84,10 +110,12 @@ def sensor_loop():
                     data = {
                         "temperature": temp,
                         "humidity": humidity,
-                        "is_dark": dark,
-                        "motion_detected": motion,
-                        "led_state": led_state,
-                        "led_mode": led_mode,
+                        "lightbulb_status": led_mode,
+                        "outlet_status": "on" if outlet_status else "off",
+                        "voltage": voltage,
+                        "amperage": current,
+                        "power": power,
+                        "total": energy,
                     }
                     try:
                         response = requests.post(POST_URL, json=data)
