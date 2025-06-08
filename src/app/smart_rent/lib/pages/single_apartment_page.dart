@@ -50,7 +50,7 @@ class _SingleApartmentPageState extends State<SingleApartmentPage> {
               ),
               ExpandableOutletSection(
                 sectionName: 'Charts',
-                sectionContainer: SRTemperatureChart(),
+                sectionContainer: DynamicSensorChart(),
                 deviceList: [
                   Device(id: '1', name: 'Temperature'),
                   Device(id: '2', name: 'Humidity'),

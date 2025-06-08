@@ -1,4 +1,5 @@
 # app.py (main_service)
+
 from sqlite3 import OperationalError
 from flask import Flask, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -118,16 +119,12 @@ def get_sensor_history(sensor_type):
     if not sensor:
         return jsonify({"error": f"Sensor '{sensor_type}' not found"}), 404
 
-    data_entries = SensorData.query.filter_by(sensor_id=sensor.id).order_by(SensorData.timestamp.desc()).all()
-    if not data_entries:
-        return jsonify({"error": f"No data found for sensor '{sensor_type}'"}), 404
-
+    entries = SensorData.query.filter_by(sensor_id=sensor.id).order_by(SensorData.timestamp.asc()).all()
     return jsonify([
         {
-            "timestamp": entry.timestamp.isoformat(),
+            "timestamp": entry.timestamp.strftime("%d.%m"),
             "value": entry.value
-        }
-        for entry in data_entries
+        } for entry in entries
     ]), 200
 
 @app.route("/lightbulbs/<int:lightbulb_id>", methods=["GET"])
@@ -172,8 +169,9 @@ if __name__ == '__main__':
                         db.session.commit()
                         print(f"✅ Sensor '{sensor_type}' created.")
 
-                for sensor_type in ['power', 'voltage', 'amperage', 'total']:
+                for sensor_type in ['power', 'voltage', 'amperage', 'total', 'temperature', 'humidity']:
                     ensure_sensor(sensor_type)
+
 
                 if Outlet.query.get(1) is None:
                     outlet = Outlet(
@@ -192,7 +190,7 @@ if __name__ == '__main__':
                     lightbulb = Lightbulb(
                         id=1,
                         status='off',
-                        sensor_id=None  # lub przypisz sensor, jeśli chcesz np. power_sensor_id
+                        sensor_id=None
                     )
                     db.session.add(lightbulb)
                     db.session.commit()
