@@ -66,7 +66,7 @@ def sensor_loop():
 
             outlet_data = outlet.status()
             dps = outlet_data["dps"]
-            outlet_status = dps.get("1")
+            outlet_status = dps.get("1")    # True, False
             voltage = dps.get("20") / 10    # V
             current = dps.get("18") / 1000  # A
             power = dps.get("19") / 10      # W
@@ -110,9 +110,8 @@ def sensor_loop():
                     data = {
                         "temperature": temp,
                         "humidity": humidity,
-                        "led_state": led_state,
-                        "led_mode": led_mode,
-                        "outlet_status": outlet_status,
+                        "lightbulb_status": led_mode,
+                        "outlet_status": "on" if outlet_status else "off",
                         "voltage": voltage,
                         "amperage": current,
                         "power": power,
