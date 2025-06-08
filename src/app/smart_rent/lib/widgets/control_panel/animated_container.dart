@@ -62,9 +62,9 @@ class _ExpandableOutletSectionState extends State<ExpandableOutletSection> {
                       SRTitle(titleTxt: widget.sectionName),
                       Row(
                         children: [
-                          DeviceDropdownPage(
-                            deviceList: widget.deviceList,
-                          ),
+                          // DeviceDropdownPage(
+                          //   deviceList: widget.deviceList,
+                          // ),
                           const SizedBox(width: 8),
                           AnimatedRotation(
                             turns: _isExpanded ? 0.5 : 0.0,

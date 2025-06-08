@@ -66,12 +66,14 @@ def sensor_loop():
 
             outlet_data = outlet.status()
             dps = outlet_data["dps"]
+            outlet_status = dps.get("1")    # True, False
             voltage = dps.get("20") / 10    # V
             current = dps.get("18") / 1000  # A
             power = dps.get("19") / 10      # W
             energy = dps.get("17") / 1000   # kWh
 
             # print("\nPomiary energii:")
+            # print(f"Stan gniazdka: {outlet_status}")
             # print(f"Napięcie: {voltage} V")
             # print(f"Prąd: {current} mA")
             # print(f"Moc: {power} W")
@@ -108,14 +110,12 @@ def sensor_loop():
                     data = {
                         "temperature": temp,
                         "humidity": humidity,
-                        "is_dark": dark,
-                        "motion_detected": motion,
-                        "led_state": led_state,
-                        "led_mode": led_mode,
+                        "lightbulb_status": led_mode,
+                        "outlet_status": "on" if outlet_status else "off",
                         "voltage": voltage,
-                        "current": current,
+                        "amperage": current,
                         "power": power,
-                        "energy": energy,
+                        "total": energy,
                     }
                     try:
                         response = requests.post(POST_URL, json=data)

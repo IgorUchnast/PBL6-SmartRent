@@ -14,7 +14,12 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+
   bool isOn = false;
+  double powerConsumption = 0.0;
+  double voltage = 0.0;
+  double amparage = 0.0;
+  double total = 0.0;
 
   @override
   void initState() {
@@ -29,20 +34,29 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(_controller);
 
-    fetchOutletStatus(1).then((status) {
-      setState(() {
-        isOn = status == 'on';
-      });
-    });
+    _fetchOutletData();
+    _fetchSensorData();
   }
 
-  Future<String> fetchOutletStatus(int outletId) async {
+  Future<void> _fetchOutletData() async {
+    try {
+      final data = await fetchOutletStatus(1);
+      setState(() {
+        isOn = data['status'] == 'on';
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Błąd pobierania danych gniazdka')),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchOutletStatus(int outletId) async {
     final response = await http.get(
       Uri.parse('http://localhost:8002/api/outlets/$outletId/status'),
     );
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['status'];
+      return json.decode(response.body);
     } else {
       throw Exception('Failed to fetch outlet status');
     }
@@ -57,6 +71,33 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
     }
   }
 
+  Future<void> _fetchSensorData() async {
+    try {
+      powerConsumption = await fetchLatestSensorValue('power');
+      voltage = await fetchLatestSensorValue('voltage');
+      amparage = await fetchLatestSensorValue('amperage');
+      total = await fetchLatestSensorValue('total');
+
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Błąd pobierania danych z czujników')),
+      );
+    }
+  }
+
+  Future<double> fetchLatestSensorValue(String type) async {
+    final response = await http.get(
+      Uri.parse('http://localhost:8000/sensors/$type/latest'),
+    );
+    if (response.statusCode == 200) {
+      final jsonBody = json.decode(response.body);
+      return jsonBody['value']?.toDouble() ?? 0.0;
+    } else {
+      throw Exception('Failed to fetch $type data');
+    }
+  }
+
   void _onTap() async {
     if (_controller.status != AnimationStatus.completed) {
       await _controller.forward();
@@ -64,13 +105,11 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
       try {
         await toggleOutletStatus(1);
-        final newStatus = await fetchOutletStatus(1);
-        setState(() {
-          isOn = newStatus == 'on';
-        });
+        await _fetchOutletData();
+        await _fetchSensorData();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Błąd zmiany stanu gniazdka')),
+          const SnackBar(content: Text('Błąd zmiany stanu gniazdka')),
         );
       }
     }
@@ -117,23 +156,12 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
                 const Divider(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     SROutletText(
-                      textData: 'Power',
-                      sensorData: 20,
-                    ),
-                    SROutletText(
-                      textData: 'Intensity',
-                      sensorData: 31,
-                    ),
-                    SROutletText(
-                      textData: 'Amparage',
-                      sensorData: 24,
-                    ),
-                    SROutletText(
-                      textData: 'Total (kWh)',
-                      sensorData: 24,
-                    ),
+                        textData: 'Power', sensorData: powerConsumption),
+                    SROutletText(textData: 'Voltage', sensorData: voltage),
+                    SROutletText(textData: 'Amperage', sensorData: amparage),
+                    SROutletText(textData: 'Total (kWh)', sensorData: total),
                   ],
                 ),
               ],

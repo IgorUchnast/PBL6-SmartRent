@@ -8,7 +8,7 @@ services:
       - /dev/gpiomem
     environment:
       - POST_INTERVAL=5
-      - DHT_INTERVAL=3
+      - DHT_INTERVAL=5
       - DEVICE_ID=bffad0217ab974c665liel
       # - IP_ADDRESS=192.168.0.184  # Comment to auto-detect
       - LOCAL_KEY=:A(fT}dG.Uu~fH8s
