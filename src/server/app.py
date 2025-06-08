@@ -9,7 +9,7 @@ from extensions import db, jwt
 from models import Lightbulb, Property, Reservation, Outlet, Sensor, SensorData
 import requests
 
-DOWNLINK_URL = "http://edge_downlink:5000/command"
+DOWNLINK_URL = "http://edge-downlink:5000/command"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@postgres:5432/smartrent'

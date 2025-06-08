@@ -5,7 +5,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-MAIN_SERVICE_URL = "http://main_service:8000"  # adres kontenera (nazwa z docker-compose)
+MAIN_SERVICE_URL = "http://main-service:8000"  # adres kontenera (nazwa z docker-compose)
 
 
 @app.route("/api/all-properties", methods=["GET"])
@@ -134,6 +134,7 @@ def proxy_lightbulb_patch(lightbulb_id):
             headers={"Content-Type": "application/json"},
             json=data
         )
+        print(response.status_code, response.json())
         return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500

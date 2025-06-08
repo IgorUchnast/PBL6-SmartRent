@@ -15,9 +15,23 @@ spec:
       containers:
         - name: edge-downlink
           image: pbl6acr.azurecr.io/edge_downlink:latest
+          ports:
+            - containerPort: 5000
           env:
             - name: IOTHUB_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
                   name: iot-secrets
                   key: iotHubConnStr
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-downlink
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000
+  selector:
+    app: edge-downlink
