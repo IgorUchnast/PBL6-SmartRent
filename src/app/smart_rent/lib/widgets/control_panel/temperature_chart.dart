@@ -23,7 +23,8 @@ class _DynamicSensorChartState extends State<DynamicSensorChart> {
   }
 
   Future<void> fetchData(String type) async {
-    final url = Uri.parse('http://localhost:8000/sensors/$type/history');
+    // 🔁 Przekierowanie przez report_service
+    final url = Uri.parse('http://localhost:8002/api/sensors/$type/history');
     final res = await http.get(url);
 
     if (res.statusCode == 200) {

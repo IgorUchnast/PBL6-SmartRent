@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_rent/api/auth_service.dart';
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
-import 'package:smart_rent/pages/apartment_page.dart';
+// import 'package:smart_rent/pages/apartment_page.dart';
 import 'package:smart_rent/pages/home_page.dart';
 import 'package:smart_rent/pages/profile_page.dart';
 // import 'package:smart_rent/pages/settings_page.dart';
