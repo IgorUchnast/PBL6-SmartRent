@@ -8,6 +8,7 @@ class ProfilePropertyList extends StatefulWidget {
   const ProfilePropertyList({
     super.key,
     required this.token,
+    required ScrollController scrollController,
   });
   final String token;
   @override

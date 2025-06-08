@@ -17,6 +17,7 @@ class ProfilePage extends StatefulWidget {
     super.key,
     required this.token,
   });
+
   final String token;
 
   @override
@@ -25,6 +26,13 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String currentView = 'active';
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void showApartments(String type) {
     setState(() {
@@ -97,6 +105,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   );
                   setState(() {}); // odśwież listę
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (_scrollController.hasClients) {
+                      _scrollController.animateTo(
+                        _scrollController.position.maxScrollExtent,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  });
                 }
               },
             ),
@@ -143,7 +160,10 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const Divider(),
             Expanded(
-              child: ProfilePropertyList(token: token),
+              child: ProfilePropertyList(
+                token: token,
+                scrollController: _scrollController,
+              ),
             ),
           ],
         ),

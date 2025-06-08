@@ -66,6 +66,21 @@ def proxy_add_property():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/outlets/<int:outlet_id>/status", methods=["GET"])
+def proxy_outlet_status(outlet_id):
+    try:
+        response = requests.get(f"{MAIN_SERVICE_URL}/outlets/{outlet_id}/status")
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/outlets/<int:outlet_id>/toggle", methods=["POST"])
+def proxy_toggle_outlet(outlet_id):
+    try:
+        response = requests.post(f"{MAIN_SERVICE_URL}/outlets/{outlet_id}/toggle")
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 

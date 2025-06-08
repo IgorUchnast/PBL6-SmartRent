@@ -4,6 +4,7 @@ import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/widgets/appbar/drawer.dart';
 import 'package:smart_rent/widgets/control_panel/animated_container.dart';
 import 'package:smart_rent/widgets/control_panel/device_list.dart';
+import 'package:smart_rent/widgets/control_panel/lightbulb_toggle.dart';
 import 'package:smart_rent/widgets/control_panel/outlet_button.dart';
 import 'package:smart_rent/widgets/control_panel/temperature_chart.dart';
 
@@ -37,9 +38,14 @@ class _SingleApartmentPageState extends State<SingleApartmentPage> {
                 sectionName: 'Outlet',
                 sectionContainer: SRPowerButtonScreen(),
                 deviceList: [
-                  Device(id: '1', name: 'Outlet Kitchen'),
-                  Device(id: '2', name: 'Outlet Livingroom'),
-                  Device(id: '3', name: 'Outlet Bathroom'),
+                  Device(id: '1', name: 'ID: 1'),
+                ],
+              ),
+              ExpandableOutletSection(
+                sectionName: 'Lightbulb',
+                sectionContainer: LightbulbToggle(lightbulbId: 1),
+                deviceList: [
+                  Device(id: '1', name: 'ID: 1'),
                 ],
               ),
               ExpandableOutletSection(
