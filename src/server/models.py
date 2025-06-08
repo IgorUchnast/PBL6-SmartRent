@@ -84,9 +84,10 @@ class SensorData(db.Model):
 class Outlet(db.Model):
     __tablename__ = 'outlets'
     id = db.Column(db.Integer, primary_key=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('properties.id', ondelete='CASCADE'), nullable=False)
     status = db.Column(db.String(20), default='off')
     power_consumption = db.Column(db.Float, default=0.0)
+    amparage = db.Column(db.Float, default=0.0)
+    voltage = db.Column(db.Float, default=0.0)
 
 
 class Lightbulb(db.Model):

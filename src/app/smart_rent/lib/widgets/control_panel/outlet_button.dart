@@ -14,7 +14,11 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+
   bool isOn = false;
+  double powerConsumption = 0.0;
+  double voltage = 0.0;
+  double amparage = 0.0;
 
   @override
   void initState() {
@@ -29,20 +33,31 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(_controller);
 
-    fetchOutletStatus(1).then((status) {
-      setState(() {
-        isOn = status == 'on';
-      });
-    });
+    _fetchOutletData();
   }
 
-  Future<String> fetchOutletStatus(int outletId) async {
+  Future<void> _fetchOutletData() async {
+    try {
+      final data = await fetchOutletStatus(1);
+      setState(() {
+        isOn = data['status'] == 'on';
+        powerConsumption = data['power_consumption']?.toDouble() ?? 0.0;
+        voltage = data['voltage']?.toDouble() ?? 0.0;
+        amparage = data['amparage']?.toDouble() ?? 0.0;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Błąd pobierania danych gniazdka')),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchOutletStatus(int outletId) async {
     final response = await http.get(
       Uri.parse('http://localhost:8002/api/outlets/$outletId/status'),
     );
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return data['status'];
+      return json.decode(response.body);
     } else {
       throw Exception('Failed to fetch outlet status');
     }
@@ -64,10 +79,7 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
       try {
         await toggleOutletStatus(1);
-        final newStatus = await fetchOutletStatus(1);
-        setState(() {
-          isOn = newStatus == 'on';
-        });
+        await _fetchOutletData();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Błąd zmiany stanu gniazdka')),
@@ -117,22 +129,22 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
                 const Divider(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     SROutletText(
                       textData: 'Power',
-                      sensorData: 20,
+                      sensorData: powerConsumption,
                     ),
                     SROutletText(
-                      textData: 'Intensity',
-                      sensorData: 31,
+                      textData: 'Voltage',
+                      sensorData: voltage,
                     ),
                     SROutletText(
-                      textData: 'Amparage',
-                      sensorData: 24,
+                      textData: 'Amperage',
+                      sensorData: amparage,
                     ),
                     SROutletText(
                       textData: 'Total (kWh)',
-                      sensorData: 24,
+                      sensorData: powerConsumption * 0.001, // przykładowe
                     ),
                   ],
                 ),
