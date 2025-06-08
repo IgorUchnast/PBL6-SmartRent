@@ -5,7 +5,7 @@ import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/pages/apartment_page.dart';
 import 'package:smart_rent/pages/home_page.dart';
 import 'package:smart_rent/pages/profile_page.dart';
-import 'package:smart_rent/pages/settings_page.dart';
+// import 'package:smart_rent/pages/settings_page.dart';
 import 'package:smart_rent/widgets/subtitle.dart';
 import 'package:provider/provider.dart';
 
@@ -107,34 +107,34 @@ class _SRDrawerState extends State<SRDrawer> {
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.monetization_on_outlined),
-              title: Text(
-                'Billings',
-                style: SRAppFonst.darkTxt,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: Text(
-                'Settings',
-                style: SRAppFonst.darkTxt,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.monetization_on_outlined),
+            //   title: Text(
+            //     'Billings',
+            //     style: SRAppFonst.darkTxt,
+            //   ),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => const SettingsPage()),
+            //     );
+            //   },
+            // ),
+            // ListTile(
+            //   leading: const Icon(Icons.settings),
+            //   title: Text(
+            //     'Settings',
+            //     style: SRAppFonst.darkTxt,
+            //   ),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => const SettingsPage()),
+            //     );
+            //   },
+            // ),
           ],
         ),
       ),
