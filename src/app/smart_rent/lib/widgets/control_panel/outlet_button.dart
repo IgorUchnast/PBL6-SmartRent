@@ -88,8 +88,9 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
   Future<double> fetchLatestSensorValue(String type) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8000/sensors/$type/latest'),
+      Uri.parse('http://localhost:8002/api/sensors/$type/latest'),
     );
+
     if (response.statusCode == 200) {
       final jsonBody = json.decode(response.body);
       return jsonBody['value']?.toDouble() ?? 0.0;
