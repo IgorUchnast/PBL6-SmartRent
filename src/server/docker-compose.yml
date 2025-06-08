@@ -56,6 +56,10 @@ services:
     build:
       context: ./device_service/edge_uplink
     container_name: edge_uplink
+    environment:
+      - EVENT_HUB_CONN_STR=${EVENT_HUB_CONN_STR}
+      - EVENT_HUB_NAME=${EVENT_HUB_NAME}
+      - TARGET_BASE_URL=http://localhost:8000/sensors
     networks:
       - default
 
@@ -64,7 +68,9 @@ services:
       context: ./device_service/edge_downlink
     container_name: edge_downlink
     environment:
-      - POST_URL=http://download_server:5000/forward
+      - IOTHUB_CONNECTION_STRING=${IOTHUB_CONNECTION_STRING}
+    ports:
+      - "5005:5000"
     networks:
       - default
 
