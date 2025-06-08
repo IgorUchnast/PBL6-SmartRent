@@ -34,12 +34,8 @@ class _DeviceDropdownPageState extends State<DeviceDropdownPage> {
     await Future.delayed(const Duration(seconds: 2)); // symulacja API
 
     setState(() {
+      devices = [];
       devices = widget.deviceList;
-      // devices = [
-      //   Device(id: '1', name: 'Outlet Kitchen'),
-      //   Device(id: '2', name: 'Outlet Livingroom'),
-      //   Device(id: '3', name: 'Outlet Bathroom'),
-      // ];
       selectedDevice = devices.first;
       isLoading = false;
     });
