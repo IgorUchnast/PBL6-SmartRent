@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: main-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: main-service
+  template:
+    metadata:
+      labels:
+        app: main-service
+    spec:
+      containers:
+        - name: main-service
+          image: pbl6acr.azurecr.io/main_service:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_HOST
+              value: postgres
+            - name: DATABASE_USER
+              value: user
+            - name: DATABASE_PASSWORD
+              value: password
+            - name: DATABASE_NAME
+              value: smartrent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: main-service
+spec:
+  type: ClusterIP
+  selector:
+    app: main-service
+  ports:
+    - port: 8000
+      targetPort: 8000

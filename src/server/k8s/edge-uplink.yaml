@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-uplink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edge-uplink
+  template:
+    metadata:
+      labels:
+        app: edge-uplink
+    spec:
+      containers:
+        - name: edge-uplink
+          image: pbl6acr.azurecr.io/edge_uplink:latest
+          env:
+            - name: EVENT_HUB_CONN_STR
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secrets
+                  key: eventHubConnStr
+            - name: EVENT_HUB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secrets
+                  key: eventHubName
+            - name: TARGET_BASE_URL
+              value: http://main-service:8000

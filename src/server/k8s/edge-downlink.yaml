@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-downlink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edge-downlink
+  template:
+    metadata:
+      labels:
+        app: edge-downlink
+    spec:
+      containers:
+        - name: edge-downlink
+          image: pbl6acr.azurecr.io/edge_downlink:latest
+          env:
+            - name: IOTHUB_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: iot-secrets
+                  key: iotHubConnStr
