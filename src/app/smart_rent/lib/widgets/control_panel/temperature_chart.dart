@@ -12,7 +12,11 @@ class DynamicSensorChart extends StatefulWidget {
 }
 
 class _DynamicSensorChartState extends State<DynamicSensorChart> {
-  final List<String> sensorTypes = ['temperature', 'humidity', 'power'];
+  final List<String> sensorTypes = [
+    'temperature (°C)',
+    'humidity (% RH)',
+    'power (W)'
+  ];
   String selectedSensor = 'temperature';
   List<String> dates = [];
   List<double> values = [];
@@ -24,7 +28,6 @@ class _DynamicSensorChartState extends State<DynamicSensorChart> {
   }
 
   Future<void> fetchData(String type) async {
-    // 🔁 Przekierowanie przez report_service
     final url = Uri.parse('$service2/api/sensors/$type/history');
     final res = await http.get(url);
 
@@ -41,8 +44,10 @@ class _DynamicSensorChartState extends State<DynamicSensorChart> {
 
   @override
   Widget build(BuildContext context) {
-    final spots =
-        List.generate(values.length, (i) => FlSpot(i.toDouble(), values[i]));
+    final spots = List.generate(
+      values.length,
+      (i) => FlSpot(i.toDouble(), values[i]),
+    );
 
     return Column(
       children: [
@@ -65,17 +70,29 @@ class _DynamicSensorChartState extends State<DynamicSensorChart> {
           height: 300,
           child: LineChart(
             LineChartData(
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  tooltipBgColor: Colors.black87,
+                  getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                    return touchedSpots.map((spot) {
+                      final index = spot.x.toInt();
+                      final dateStr = index < dates.length ? dates[index] : '';
+                      final parsedDate = DateTime.tryParse(dateStr);
+                      final formattedDate = parsedDate != null
+                          ? "${parsedDate.day.toString().padLeft(2, '0')}.${parsedDate.month.toString().padLeft(2, '0')} ${parsedDate.hour.toString().padLeft(2, '0')}:${parsedDate.minute.toString().padLeft(2, '0')}"
+                          : dateStr;
+
+                      return LineTooltipItem(
+                        '$formattedDate\n${spot.y.toStringAsFixed(2)}',
+                        const TextStyle(color: Colors.white),
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
               titlesData: FlTitlesData(
                 bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 1,
-                    getTitlesWidget: (value, meta) {
-                      int index = value.toInt();
-                      return Text(index < dates.length ? dates[index] : '',
-                          style: const TextStyle(fontSize: 10));
-                    },
-                  ),
+                  sideTitles: SideTitles(showTitles: false),
                 ),
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(

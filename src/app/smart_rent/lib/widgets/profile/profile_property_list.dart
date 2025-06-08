@@ -46,7 +46,7 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
 
   Future<void> releaseProperty(Item item) async {
     final response = await http.patch(
-      Uri.parse('http://localhost:8002/api/properties/${item.id}/release'),
+      Uri.parse('$service2/api/properties/${item.id}/release'),
       headers: {
         'Authorization': 'Bearer ${widget.token}',
         'Content-Type': 'application/json',

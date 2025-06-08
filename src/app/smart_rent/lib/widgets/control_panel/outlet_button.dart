@@ -160,9 +160,10 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SROutletText(
-                        textData: 'Power', sensorData: powerConsumption),
-                    SROutletText(textData: 'Voltage', sensorData: voltage),
-                    SROutletText(textData: 'Amperage', sensorData: amparage),
+                        textData: 'Power (W)', sensorData: powerConsumption),
+                    SROutletText(textData: 'Voltage (V)', sensorData: voltage),
+                    SROutletText(
+                        textData: 'Amperage (A)', sensorData: amparage),
                     // SROutletText(textData: 'Total (kWh)', sensorData: total),
                   ],
                 ),
