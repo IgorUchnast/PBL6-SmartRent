@@ -1,7 +1,7 @@
 #!/bin/sh
 
-echo "⏳ Waiting for PostgreSQL at db:5432..."
-while ! nc -z db 5432; do
+echo "⏳ Waiting for PostgreSQL at postgres:5432..."
+while ! nc -z postgres 5432; do
   sleep 1
 done
 

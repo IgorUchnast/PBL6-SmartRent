@@ -12,7 +12,7 @@ import requests
 DOWNLINK_URL = "http://edge_downlink:5000/command"
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db:5432/smartrent'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@postgres:5432/smartrent'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 
