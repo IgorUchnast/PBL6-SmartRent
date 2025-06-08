@@ -23,6 +23,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 
 Future<Map<String, dynamic>> addProperty(
   String token,
@@ -32,7 +33,7 @@ Future<Map<String, dynamic>> addProperty(
   String adress,
 ) async {
   final response = await http.post(
-    Uri.parse("http://localhost:8002/api/properties"),
+    Uri.parse("$service2/api/properties"),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

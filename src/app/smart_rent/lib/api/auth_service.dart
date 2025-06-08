@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 
 class AuthService {
-  final String baseUrl = 'http://localhost:8001'; // Android emulator
+  final String baseUrl = service1; // Android emulator
 
   Future<Map<String, dynamic>> register(
       String email, String password, String name) async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 import 'dart:convert';
 import 'package:smart_rent/widgets/control_panel/outlet_txt.dart';
 
@@ -53,7 +54,7 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
   Future<Map<String, dynamic>> fetchOutletStatus(int outletId) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8002/api/outlets/$outletId/status'),
+      Uri.parse('$service2/api/outlets/$outletId/status'),
     );
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -64,7 +65,7 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
   Future<void> toggleOutletStatus(int outletId) async {
     final response = await http.post(
-      Uri.parse('http://localhost:8002/api/outlets/$outletId/toggle'),
+      Uri.parse('$service2/api/outlets/$outletId/toggle'),
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to toggle outlet');
@@ -88,7 +89,7 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
 
   Future<double> fetchLatestSensorValue(String type) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8002/api/sensors/$type/latest'),
+      Uri.parse('$service2/api/sensors/$type/latest'),
     );
 
     if (response.statusCode == 200) {

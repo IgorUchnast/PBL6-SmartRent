@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 
 class DynamicSensorChart extends StatefulWidget {
   const DynamicSensorChart({super.key});
@@ -24,7 +25,7 @@ class _DynamicSensorChartState extends State<DynamicSensorChart> {
 
   Future<void> fetchData(String type) async {
     // 🔁 Przekierowanie przez report_service
-    final url = Uri.parse('http://localhost:8002/api/sensors/$type/history');
+    final url = Uri.parse('$service2/api/sensors/$type/history');
     final res = await http.get(url);
 
     if (res.statusCode == 200) {

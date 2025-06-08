@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/pages/single_apartment_page.dart';
@@ -29,7 +30,7 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
 
   Future<List<Item>> fetchUserProperties(String token) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8002/api/properties'),
+      Uri.parse('$service2/api/properties'),
       headers: {
         'Authorization': 'Bearer $token',
       },

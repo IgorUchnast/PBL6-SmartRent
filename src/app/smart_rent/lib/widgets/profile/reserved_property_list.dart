@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/pages/single_apartment_page.dart';
@@ -30,7 +31,7 @@ class _ReservedPropertyListState extends State<ReservedPropertyList> {
 
   Future<List<ReservationItem>> fetchReservations(String token) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8002/api/reservations'),
+      Uri.parse('$service2/api/reservations'),
       headers: {
         'Authorization': 'Bearer $token',
       },

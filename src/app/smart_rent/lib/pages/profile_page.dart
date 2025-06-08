@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:smart_rent/api/auth_service.dart';
+import 'package:smart_rent/api/config.dart';
 import 'package:smart_rent/api/property_service.dart';
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
@@ -44,7 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> fetchUserInfo() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8002/api/me'),
+        Uri.parse('$service2/api/me'),
         headers: {
           'Authorization': 'Bearer ${widget.token}',
         },

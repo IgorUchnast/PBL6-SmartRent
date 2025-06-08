@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 
@@ -22,7 +23,7 @@ class _ApiListPageState extends State<ApiListPage> {
 
   Future<List<Item>> fetchItemsFromApi() async {
     final response = await http.get(
-      Uri.parse('http://localhost:8002/api/all-properties'),
+      Uri.parse('$service2/api/all-properties'),
     );
 
     if (response.statusCode == 200) {
@@ -35,7 +36,7 @@ class _ApiListPageState extends State<ApiListPage> {
 
   Future<void> reserveProperty(int propertyId) async {
     final response = await http.post(
-      Uri.parse('http://localhost:8002/api/reserve'),
+      Uri.parse('$service2/api/reserve'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'property_id': propertyId,

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:smart_rent/api/config.dart';
 import 'lightbulb.dart';
 
 // Zmienione URL na report_service
-const String baseUrl = 'http://localhost:8002/api';
+const String baseUrl = '$service2/api';
 
 Future<Lightbulb> fetchLightbulb(int id) async {
   final response = await http.get(Uri.parse('$baseUrl/lightbulbs/$id'));
