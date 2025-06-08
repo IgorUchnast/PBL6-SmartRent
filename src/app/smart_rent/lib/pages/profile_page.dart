@@ -1,5 +1,7 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:smart_rent/api/auth_service.dart';
 import 'package:smart_rent/api/property_service.dart';
@@ -7,8 +9,9 @@ import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/widgets/appbar/drawer.dart';
 import 'package:smart_rent/widgets/profile/profile_button.dart';
-import 'package:smart_rent/widgets/profile/profile_container.dart';
+// import 'package:smart_rent/widgets/profile/profile_container.dart';
 import 'package:smart_rent/widgets/profile/profile_property_list.dart';
+import 'package:smart_rent/widgets/profile/reserved_property_list.dart';
 import 'package:smart_rent/widgets/subtitle.dart';
 import 'package:smart_rent/widgets/title.dart';
 
@@ -28,10 +31,46 @@ class _ProfilePageState extends State<ProfilePage> {
   String currentView = 'active';
   final ScrollController _scrollController = ScrollController();
 
+  String userName = '';
+  String userEmail = '';
+  bool isLoadingUser = true;
+
   @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    fetchUserInfo();
+  }
+
+  Future<void> fetchUserInfo() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8002/api/me'),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          userName = data['name'] ?? 'Nieznany';
+          userEmail = data['email'] ?? 'brak@domena.pl';
+          isLoadingUser = false;
+        });
+      } else {
+        setState(() {
+          userName = 'Błąd użytkownika';
+          userEmail = 'Nie udało się pobrać e-maila';
+          isLoadingUser = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        userName = 'Błąd połączenia';
+        userEmail = 'Brak danych';
+        isLoadingUser = false;
+      });
+    }
   }
 
   void showApartments(String type) {
@@ -50,21 +89,21 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Dodaj mieszkanie'),
+          title: const Text('Add Apartment'),
           content: SingleChildScrollView(
             child: Column(
               children: [
                 TextField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Opis'),
+                  decoration: const InputDecoration(labelText: 'Description'),
                 ),
                 TextField(
                   controller: _adressController,
-                  decoration: const InputDecoration(labelText: 'Adres'),
+                  decoration: const InputDecoration(labelText: 'Address'),
                 ),
                 TextField(
                   controller: _priceController,
-                  decoration: const InputDecoration(labelText: 'Cena'),
+                  decoration: const InputDecoration(labelText: 'Price'),
                   keyboardType: TextInputType.number,
                 ),
                 TextField(
@@ -76,11 +115,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             TextButton(
-              child: const Text('Anuluj'),
+              child: const Text('Back'),
               onPressed: () => Navigator.of(ctx).pop(),
             ),
             ElevatedButton(
-              child: const Text('Zapisz'),
+              child: const Text('Save'),
               onPressed: () async {
                 final description = _descriptionController.text.trim();
                 final adress = _adressController.text.trim();
@@ -104,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           Text(result['message'] ?? result['error'] ?? 'Błąd'),
                     ),
                   );
-                  setState(() {}); // odśwież listę
+                  setState(() {});
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (_scrollController.hasClients) {
                       _scrollController.animateTo(
@@ -138,10 +177,12 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(5.0),
         child: Column(
           children: [
-            SRProfileContainer(
-              userName: 'IgorUchnast',
-              userEmail: 'igor.uchnast@gmail.com',
-            ),
+            // isLoadingUser
+            //     ? const CircularProgressIndicator()
+            //     : SRProfileContainer(
+            //         userName: userName,
+            //         userEmail: userEmail,
+            //       ),
             const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -152,26 +193,33 @@ class _ProfilePageState extends State<ProfilePage> {
                   isSelected: currentView == 'active',
                 ),
                 SRProfileButton(
-                  buttonTxt: 'Apartments History',
-                  onPressed: () => showApartments('history'),
-                  isSelected: currentView == 'history',
+                  buttonTxt: 'Reserved',
+                  onPressed: () => showApartments('reserved'),
+                  isSelected: currentView == 'reserved',
                 ),
               ],
             ),
             const Divider(),
             Expanded(
-              child: ProfilePropertyList(
-                token: token,
-                scrollController: _scrollController,
-              ),
+              child: currentView == 'active'
+                  ? ProfilePropertyList(
+                      token: token,
+                      scrollController: _scrollController,
+                    )
+                  : ReservedPropertyList(
+                      token: token,
+                      scrollController: _scrollController,
+                    ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddPropertyDialog(token),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: currentView == 'active'
+          ? FloatingActionButton(
+              onPressed: () => _showAddPropertyDialog(token),
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

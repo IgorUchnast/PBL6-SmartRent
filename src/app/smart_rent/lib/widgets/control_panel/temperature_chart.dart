@@ -11,7 +11,7 @@ class DynamicSensorChart extends StatefulWidget {
 }
 
 class _DynamicSensorChartState extends State<DynamicSensorChart> {
-  final List<String> sensorTypes = ['temperature', 'humidity', 'total'];
+  final List<String> sensorTypes = ['temperature', 'humidity', 'power'];
   String selectedSensor = 'temperature';
   List<String> dates = [];
   List<double> values = [];

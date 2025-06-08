@@ -11,10 +11,11 @@ MAIN_SERVICE_URL = "http://main_service:8000"  # adres kontenera (nazwa z docker
 @app.route("/api/all-properties", methods=["GET"])
 def get_all_properties():
     try:
-        response = requests.get("http://main_service:8000/properties/public")
+        response = requests.get(f"{MAIN_SERVICE_URL}/properties/public")
         return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 def forward_request(path, token):
     """Pomocnicza funkcja do wysyłania żądań z JWT"""
@@ -66,6 +67,7 @@ def proxy_add_property():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/api/outlets/<int:outlet_id>/status", methods=["GET"])
 def proxy_outlet_status(outlet_id):
     try:
@@ -73,7 +75,8 @@ def proxy_outlet_status(outlet_id):
         return jsonify(response.json()), response.status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+
 @app.route("/api/outlets/<int:outlet_id>/toggle", methods=["POST"])
 def proxy_toggle_outlet(outlet_id):
     try:
@@ -83,6 +86,35 @@ def proxy_toggle_outlet(outlet_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/reserve", methods=["POST"])
+def reserve_property():
+    try:
+        data = request.get_json()
+        response = requests.post(f"{MAIN_SERVICE_URL}/reserve", json=data)
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/properties/<int:property_id>/release", methods=["PATCH"])
+def proxy_release_property(property_id):
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    if not token:
+        return jsonify({"error": "Missing token"}), 401
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.patch(
+            f"{MAIN_SERVICE_URL}/properties/{property_id}/release",
+            headers=headers
+        )
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

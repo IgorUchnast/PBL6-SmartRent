@@ -161,7 +161,7 @@ class _SRPowerButtonScreenState extends State<SRPowerButtonScreen>
                         textData: 'Power', sensorData: powerConsumption),
                     SROutletText(textData: 'Voltage', sensorData: voltage),
                     SROutletText(textData: 'Amperage', sensorData: amparage),
-                    SROutletText(textData: 'Total (kWh)', sensorData: total),
+                    // SROutletText(textData: 'Total (kWh)', sensorData: total),
                   ],
                 ),
               ],

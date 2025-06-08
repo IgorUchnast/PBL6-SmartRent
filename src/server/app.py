@@ -185,7 +185,7 @@ def update_lightbulb(lightbulb_id):
         return jsonify({"error": f"Request failed: {str(e)}"}), 500
     db.session.commit()
     return jsonify({"message": "Lightbulb updated", "status": lightbulb.status}), 200
-
+  
 @app.route("/lightbulbs/<int:lightbulb_id>/status", methods=["POST"])
 def update_lightbulb_status(lightbulb_id):
     lightbulb = Lightbulb.query.get(lightbulb_id)
@@ -198,6 +198,57 @@ def update_lightbulb_status(lightbulb_id):
     lightbulb.status = new_status
     db.session.commit()
     return jsonify({"message": "Lightbulb status updated", "status": lightbulb.status}), 200
+
+@app.route("/reserve", methods=["POST"])
+def make_reservation():
+    data = request.get_json()
+    print("📥 Received reservation payload:", data)  # Dodaj to
+
+    property_id = data.get("property_id")
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+
+    if not all([property_id, start_date, end_date]):
+        return jsonify({"error": "Missing fields"}), 400
+
+    prop = Property.query.get(property_id)
+    if not prop:
+        return jsonify({"error": "Property not found"}), 404
+    if prop.status not in ["free", "Active"]:
+        return jsonify({"error": "Property is not available"}), 400
+
+    new_res = Reservation(
+        user_id=1,  # lub get_jwt_identity() jeśli masz JWT
+        property_id=property_id,
+        start_date=start_date,
+        end_date=end_date,
+        status="confirmed"
+    )
+    prop.status = "reserved"
+
+    db.session.add(new_res)
+    db.session.commit()
+
+    return jsonify({"message": "Reservation created"}), 201
+
+@app.route("/properties/<int:property_id>/release", methods=["PATCH"])
+@jwt_required()
+def release_property(property_id):
+    prop = Property.query.get(property_id)
+    if not prop:
+        return jsonify({"error": "Property not found"}), 404
+
+    # Zakładamy, że tylko właściciel może zakończyć
+    user_id = get_jwt_identity()
+    if prop.user_id != int(user_id):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    if prop.status != "reserved":
+        return jsonify({"error": "Property not reserved"}), 400
+
+    prop.status = "Active"
+    db.session.commit()
+    return jsonify({"message": "Reservation ended"}), 200
 
 if __name__ == '__main__':
     with app.app_context():

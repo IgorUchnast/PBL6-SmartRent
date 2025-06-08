@@ -5,31 +5,32 @@ import 'package:smart_rent/config/colors.dart';
 import 'package:smart_rent/config/fonts.dart';
 import 'package:smart_rent/pages/single_apartment_page.dart';
 
-class ProfilePropertyList extends StatefulWidget {
-  const ProfilePropertyList({
+class ReservedPropertyList extends StatefulWidget {
+  const ReservedPropertyList({
     super.key,
     required this.token,
-    required ScrollController scrollController,
+    required this.scrollController,
   });
 
   final String token;
+  final ScrollController scrollController;
 
   @override
-  State<ProfilePropertyList> createState() => _ProfilePropertyListState();
+  State<ReservedPropertyList> createState() => _ReservedPropertyListState();
 }
 
-class _ProfilePropertyListState extends State<ProfilePropertyList> {
-  late Future<List<Item>> futureItems;
+class _ReservedPropertyListState extends State<ReservedPropertyList> {
+  late Future<List<ReservationItem>> futureItems;
 
   @override
   void initState() {
     super.initState();
-    futureItems = fetchUserProperties(widget.token);
+    futureItems = fetchReservations(widget.token);
   }
 
-  Future<List<Item>> fetchUserProperties(String token) async {
+  Future<List<ReservationItem>> fetchReservations(String token) async {
     final response = await http.get(
-      Uri.parse('http://localhost:8002/api/properties'),
+      Uri.parse('http://localhost:8002/api/reservations'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -37,38 +38,15 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonList = jsonDecode(response.body);
-      return jsonList.map((item) => Item.fromJson(item)).toList();
+      return jsonList.map((item) => ReservationItem.fromJson(item)).toList();
     } else {
-      throw Exception('Nie udało się pobrać mieszkań użytkownika');
-    }
-  }
-
-  Future<void> releaseProperty(Item item) async {
-    final response = await http.patch(
-      Uri.parse('http://localhost:8002/api/properties/${item.id}/release'),
-      headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Zakończono rezerwację")),
-      );
-      setState(() {
-        futureItems = fetchUserProperties(widget.token);
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Błąd: ${response.body}")),
-      );
+      throw Exception('Nie udało się pobrać rezerwacji');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Item>>(
+    return FutureBuilder<List<ReservationItem>>(
       future: futureItems,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -76,11 +54,12 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
         } else if (snapshot.hasError) {
           return Center(child: Text('Błąd: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('Brak dostępnych mieszkań'));
+          return const Center(child: Text('Brak aktywnych rezerwacji'));
         }
 
         final items = snapshot.data!;
         return ListView.builder(
+          controller: widget.scrollController,
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
@@ -101,24 +80,21 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
                   side: BorderSide(color: SRAppColors.borderColor),
                 ),
                 child: ListTile(
-                  title: Text(item.name, style: SRAppFonst.subtitle),
+                  title: Text('Reservation #${item.id}',
+                      style: SRAppFonst.subtitle),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Divider(),
-                      Text('Price: \$${item.price.toStringAsFixed(2)}',
+                      Text('Apartment ID: ${item.propertyId}',
                           style: SRAppFonst.darkTxt),
                       Text('Status: ${item.status}', style: SRAppFonst.darkTxt),
-                      Text('Description: ${item.description}',
+                      Text('Start date: ${item.startDate}',
+                          style: SRAppFonst.darkTxt),
+                      Text('End date: ${item.endDate}',
                           style: SRAppFonst.darkTxt),
                     ],
                   ),
-                  trailing: item.status == 'reserved'
-                      ? ElevatedButton(
-                          onPressed: () => releaseProperty(item),
-                          child: const Text('Finish'),
-                        )
-                      : null,
                 ),
               ),
             );
@@ -129,28 +105,28 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
   }
 }
 
-class Item {
+class ReservationItem {
   final int id;
-  final String name;
-  final double price;
+  final int propertyId;
   final String status;
-  final String description;
+  final String startDate;
+  final String endDate;
 
-  Item({
+  ReservationItem({
     required this.id,
-    required this.name,
-    required this.price,
+    required this.propertyId,
     required this.status,
-    required this.description,
+    required this.startDate,
+    required this.endDate,
   });
 
-  factory Item.fromJson(Map<String, dynamic> json) {
-    return Item(
+  factory ReservationItem.fromJson(Map<String, dynamic> json) {
+    return ReservationItem(
       id: json['id'],
-      name: json['name'] ?? 'Apartament',
-      price: (json['price'] as num).toDouble(),
-      status: json['status'],
-      description: json['description'],
+      propertyId: json['property_id'],
+      status: json['status'] ?? 'pending',
+      startDate: json['start_date'],
+      endDate: json['end_date'],
     );
   }
 }

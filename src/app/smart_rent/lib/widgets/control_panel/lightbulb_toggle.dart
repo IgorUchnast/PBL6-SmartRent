@@ -73,13 +73,13 @@ class _LightbulbToggleState extends State<LightbulbToggle> {
       case 'auto':
         icon = Icons.bolt;
         color = Colors.blueAccent;
-        label = 'Wyłącz';
+        label = 'OFF';
         break;
       case 'off':
       default:
         icon = Icons.lightbulb_outline;
         color = Colors.grey;
-        label = 'Włącz';
+        label = 'ON';
         break;
     }
 

@@ -37,14 +37,14 @@ class RegisterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Rejestracja")),
+      appBar: AppBar(title: Text("Registration")),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Imię'),
+              decoration: InputDecoration(labelText: 'Name'),
             ),
             TextField(
               controller: _emailController,
@@ -53,12 +53,12 @@ class RegisterPage extends StatelessWidget {
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: InputDecoration(labelText: 'Hasło'),
+              decoration: InputDecoration(labelText: 'Password'),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _register(context),
-              child: Text("Zarejestruj się"),
+              child: Text("Register"),
             ),
             ElevatedButton(
               onPressed: () {
@@ -67,7 +67,7 @@ class RegisterPage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => LoginPage()),
                 );
               },
-              child: Text("Are you regitered? Logi in"),
+              child: Text("Login Page"),
             ),
           ],
         ),
