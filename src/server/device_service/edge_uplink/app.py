@@ -19,6 +19,22 @@ def send_to_endpoint(sensor_name, value):
     except Exception as e:
         print(f"Error while sending to {url}: {e}")
 
+def update_device_status(device_type, device_id, status):
+    if device_type == "lightbulb":
+        url = f"{TARGET_BASE_URL}/lightbulbs/{device_id}/status"
+        payload = {"lightbulb_status": status}
+    elif device_type == "outlet":
+        url = f"{TARGET_BASE_URL}/outlets/{device_id}/status"
+        payload = {"outlet_status": status}
+    else:
+        print(f"Unknown device type: {device_type}")
+        return
+    try:
+        response = requests.post(url, json=payload)
+        print(f"[{device_type} {device_id}] Status update: {response.status_code}: {response.text}")
+    except Exception as e:
+        print(f"Error while updating {device_type} status for {device_id}: {e}")
+    
 # Callback function to handle incoming events
 def on_event(partition_context, event):
     try:
@@ -29,7 +45,13 @@ def on_event(partition_context, event):
         data = json.loads(body)
         for key, value in data.items():
             if isinstance(value, (int, float, str)):
-                send_to_endpoint(key, value)
+                if key.startswith("lightbulb_"):
+                    update_device_status("lightbulb", 1, value)
+                elif key.startswith("outlet_"):
+                    update_device_status("outlet", 1, value)
+                else:
+                    # Send sensor data to the target endpoint
+                    send_to_endpoint(key, value)
             else:
                 print(f"Unsupported data type for {key}: {type(value)}")
 

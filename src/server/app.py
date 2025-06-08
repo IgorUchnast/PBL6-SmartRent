@@ -7,6 +7,9 @@ from flask_cors import CORS
 import time
 from extensions import db, jwt
 from models import Lightbulb, Property, Reservation, Outlet, Sensor, SensorData
+import requests
+
+DOWNLINK_URL = "http://edge_downlink:5000/command"
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@db:5432/smartrent'
@@ -76,7 +79,27 @@ def toggle_outlet_status(outlet_id):
     outlet = Outlet.query.get(outlet_id)
     if not outlet:
         return jsonify({"error": "Outlet not found"}), 404
+    cmd = "turn_off_outlet" if outlet.status == "on" else "turn_on_outlet"
     outlet.status = "off" if outlet.status == "on" else "on"
+    try:
+        response = requests.post(DOWNLINK_URL, json={"methodName": "execute", "payload": {"command": cmd}})
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to toggle outlet status"}), 500
+    except requests.RequestException as e:
+        return jsonify({"error": f"Request failed: {str(e)}"}), 500
+    db.session.commit()
+    return jsonify({"message": "Outlet status updated", "status": outlet.status}), 200
+
+@app.route("/outlets/<int:outlet_id>/status", methods=["POST"])
+def update_outlet_status(outlet_id):
+    outlet = Outlet.query.get(outlet_id)
+    if not outlet:
+        return jsonify({"error": "Outlet not found"}), 404
+    data = request.get_json()
+    new_status = data.get("outlet_status")
+    if new_status not in ["on", "off"]:
+        return jsonify({"error": "Invalid status"}), 400
+    outlet.status = new_status
     db.session.commit()
     return jsonify({"message": "Outlet status updated", "status": outlet.status}), 200
 
@@ -151,8 +174,30 @@ def update_lightbulb(lightbulb_id):
         return jsonify({"error": "Invalid status"}), 400
 
     lightbulb.status = new_status
+    cmd = f"turn_{new_status}_led"
+    if new_status == "auto":
+        cmd = "set_led_auto"
+    try:
+        response = requests.post(DOWNLINK_URL, json={"methodName": "execute", "payload": {"command": cmd}})
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to toggle outlet status"}), 500
+    except requests.RequestException as e:
+        return jsonify({"error": f"Request failed: {str(e)}"}), 500
     db.session.commit()
     return jsonify({"message": "Lightbulb updated", "status": lightbulb.status}), 200
+
+@app.route("/lightbulbs/<int:lightbulb_id>/status", methods=["POST"])
+def update_lightbulb_status(lightbulb_id):
+    lightbulb = Lightbulb.query.get(lightbulb_id)
+    if not lightbulb:
+        return jsonify({"error": "Lightbulb not found"}), 404
+    data = request.get_json()
+    new_status = data.get("lightbulb_status")
+    if new_status not in ["on", "off", "auto"]:
+        return jsonify({"error": "Invalid status"}), 400
+    lightbulb.status = new_status
+    db.session.commit()
+    return jsonify({"message": "Lightbulb status updated", "status": lightbulb.status}), 200
 
 if __name__ == '__main__':
     with app.app_context():
