@@ -116,6 +116,45 @@ def proxy_release_property(property_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/lightbulbs/<int:lightbulb_id>", methods=["GET"])
+def proxy_lightbulb_get(lightbulb_id):
+    try:
+        response = requests.get(f"{MAIN_SERVICE_URL}/lightbulbs/{lightbulb_id}")
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/lightbulbs/<int:lightbulb_id>", methods=["PATCH"])
+def proxy_lightbulb_patch(lightbulb_id):
+    try:
+        data = request.get_json()
+        response = requests.patch(
+            f"{MAIN_SERVICE_URL}/lightbulbs/{lightbulb_id}",
+            headers={"Content-Type": "application/json"},
+            json=data
+        )
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/sensors/<string:sensor_type>/history", methods=["GET"])
+def proxy_sensor_history(sensor_type):
+    try:
+        response = requests.get(f"{MAIN_SERVICE_URL}/sensors/{sensor_type}/history")
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/sensors/<sensor_type>/latest', methods=['GET'])
+def proxy_sensor_latest(sensor_type):
+    try:
+        res = requests.get(f'{MAIN_SERVICE_URL}/sensors/{sensor_type}/latest')
+        return (res.content, res.status_code, res.headers.items())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8002, debug=True)
