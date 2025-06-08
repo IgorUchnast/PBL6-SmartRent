@@ -38,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _loginStatus = LoginStatus.success);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Zalogowano!')),
+        const SnackBar(content: Text('Log in!')),
       );
 
       Navigator.pushReplacement(
@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     final isLoading = _loginStatus == LoginStatus.loading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Logowanie")),
+      appBar: AppBar(title: const Text("Login")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -74,14 +74,14 @@ class _LoginPageState extends State<LoginPage> {
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Hasło'),
+              decoration: const InputDecoration(labelText: 'Password'),
             ),
             const SizedBox(height: 20),
             isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: () => _login(context),
-                    child: const Text("Zaloguj się"),
+                    child: const Text("Log in"),
                   ),
           ],
         ),

@@ -92,21 +92,21 @@ class _SRDrawerState extends State<SRDrawer> {
                 );
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.access_time_outlined),
-              title: Text(
-                'Current Apartments',
-                style: SRAppFonst.darkTxt,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const ApartmentPage()),
-                );
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(Icons.access_time_outlined),
+            //   title: Text(
+            //     'Current Apartments',
+            //     style: SRAppFonst.darkTxt,
+            //   ),
+            //   onTap: () {
+            //     Navigator.pop(context);
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //           builder: (context) => const ApartmentPage()),
+            //     );
+            //   },
+            // ),
             // ListTile(
             //   leading: const Icon(Icons.monetization_on_outlined),
             //   title: Text(

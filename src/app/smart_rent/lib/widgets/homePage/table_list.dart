@@ -91,10 +91,10 @@ class _ApiListPageState extends State<ApiListPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Divider(),
-                    Text('Cena: \$${item.price.toStringAsFixed(2)}',
+                    Text('Price: \$${item.price.toStringAsFixed(2)}',
                         style: SRAppFonst.darkTxt),
                     Text('Status: ${item.status}', style: SRAppFonst.darkTxt),
-                    Text('Opis: ${item.description}',
+                    Text('Description: ${item.description}',
                         style: SRAppFonst.darkTxt),
                   ],
                 ),
@@ -102,7 +102,7 @@ class _ApiListPageState extends State<ApiListPage> {
                   onPressed: item.status == 'Active'
                       ? () => reserveProperty(item.id)
                       : null,
-                  child: const Text("Rezerwuj"),
+                  child: const Text("Book"),
                 ),
               ),
             );
@@ -131,7 +131,7 @@ class Item {
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
       id: json['id'],
-      name: json['name'] ?? 'Brak nazwy',
+      name: json['name'] ?? 'Apartment',
       price: (json['price'] as num).toDouble(),
       status: json['status'],
       description: json['description'],
