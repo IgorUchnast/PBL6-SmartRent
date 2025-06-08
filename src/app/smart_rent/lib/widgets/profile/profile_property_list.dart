@@ -10,13 +10,16 @@ class ProfilePropertyList extends StatefulWidget {
     required this.token,
     required ScrollController scrollController,
   });
+
   final String token;
+
   @override
   State<ProfilePropertyList> createState() => _ProfilePropertyListState();
 }
 
 class _ProfilePropertyListState extends State<ProfilePropertyList> {
   late Future<List<Item>> futureItems;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +39,29 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
       return jsonList.map((item) => Item.fromJson(item)).toList();
     } else {
       throw Exception('Nie udało się pobrać mieszkań użytkownika');
+    }
+  }
+
+  Future<void> releaseProperty(Item item) async {
+    final response = await http.patch(
+      Uri.parse('http://localhost:8002/api/properties/${item.id}/release'),
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Zakończono rezerwację")),
+      );
+      setState(() {
+        futureItems = fetchUserProperties(widget.token);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Błąd: ${response.body}")),
+      );
     }
   }
 
@@ -65,28 +91,24 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
                 side: BorderSide(color: SRAppColors.borderColor),
               ),
               child: ListTile(
-                title: Text(
-                  item.name,
-                  style: SRAppFonst.subtitle,
-                ),
+                title: Text(item.name, style: SRAppFonst.subtitle),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Divider(),
-                    Text(
-                      'Cena: \$${item.price.toStringAsFixed(2)}',
-                      style: SRAppFonst.darkTxt,
-                    ),
-                    Text(
-                      'Status: ${item.status}',
-                      style: SRAppFonst.darkTxt,
-                    ),
-                    Text(
-                      'Opis: ${item.description}',
-                      style: SRAppFonst.darkTxt,
-                    ),
+                    const Divider(),
+                    Text('Cena: \$${item.price.toStringAsFixed(2)}',
+                        style: SRAppFonst.darkTxt),
+                    Text('Status: ${item.status}', style: SRAppFonst.darkTxt),
+                    Text('Opis: ${item.description}',
+                        style: SRAppFonst.darkTxt),
                   ],
                 ),
+                trailing: item.status == 'reserved'
+                    ? ElevatedButton(
+                        onPressed: () => releaseProperty(item),
+                        child: const Text('Zakończ'),
+                      )
+                    : null,
               ),
             );
           },
@@ -97,12 +119,14 @@ class _ProfilePropertyListState extends State<ProfilePropertyList> {
 }
 
 class Item {
+  final int id;
   final String name;
   final double price;
   final String status;
   final String description;
 
   Item({
+    required this.id,
     required this.name,
     required this.price,
     required this.status,
@@ -111,7 +135,8 @@ class Item {
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
-      name: json['name'] ?? 'Apartament for rent',
+      id: json['id'],
+      name: json['name'] ?? 'Apartament',
       price: (json['price'] as num).toDouble(),
       status: json['status'],
       description: json['description'],

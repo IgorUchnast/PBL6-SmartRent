@@ -50,21 +50,21 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Dodaj mieszkanie'),
+          title: const Text('Add Apartment'),
           content: SingleChildScrollView(
             child: Column(
               children: [
                 TextField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Opis'),
+                  decoration: const InputDecoration(labelText: 'Description'),
                 ),
                 TextField(
                   controller: _adressController,
-                  decoration: const InputDecoration(labelText: 'Adres'),
+                  decoration: const InputDecoration(labelText: 'Address'),
                 ),
                 TextField(
                   controller: _priceController,
-                  decoration: const InputDecoration(labelText: 'Cena'),
+                  decoration: const InputDecoration(labelText: 'Price'),
                   keyboardType: TextInputType.number,
                 ),
                 TextField(
@@ -76,11 +76,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           actions: [
             TextButton(
-              child: const Text('Anuluj'),
+              child: const Text('Back'),
               onPressed: () => Navigator.of(ctx).pop(),
             ),
             ElevatedButton(
-              child: const Text('Zapisz'),
+              child: const Text('Save'),
               onPressed: () async {
                 final description = _descriptionController.text.trim();
                 final adress = _adressController.text.trim();
@@ -152,7 +152,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   isSelected: currentView == 'active',
                 ),
                 SRProfileButton(
-                  buttonTxt: 'Apartments History',
+                  buttonTxt: 'Active',
                   onPressed: () => showApartments('history'),
                   isSelected: currentView == 'history',
                 ),

@@ -33,6 +33,33 @@ class _ApiListPageState extends State<ApiListPage> {
     }
   }
 
+  Future<void> reserveProperty(int propertyId) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:8002/api/reserve'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'property_id': propertyId,
+        'start_date': DateTime.now().toIso8601String(),
+        'end_date':
+            DateTime.now().add(const Duration(days: 3)).toIso8601String(),
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Rezerwacja udana")),
+      );
+      final updatedItems = await fetchItemsFromApi();
+      setState(() {
+        futureItems = Future.value(updatedItems);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Błąd rezerwacji: ${response.body}")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Item>>(
@@ -59,27 +86,23 @@ class _ApiListPageState extends State<ApiListPage> {
                 side: BorderSide(color: SRAppColors.borderColor),
               ),
               child: ListTile(
-                title: Text(
-                  item.name,
-                  style: SRAppFonst.subtitle,
-                ),
+                title: Text(item.name, style: SRAppFonst.subtitle),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Divider(),
-                    Text(
-                      'Cena: \$${item.price.toStringAsFixed(2)}',
-                      style: SRAppFonst.darkTxt,
-                    ),
-                    Text(
-                      'Status: ${item.status}',
-                      style: SRAppFonst.darkTxt,
-                    ),
-                    Text(
-                      'Opis: ${item.description}',
-                      style: SRAppFonst.darkTxt,
-                    ),
+                    const Divider(),
+                    Text('Cena: \$${item.price.toStringAsFixed(2)}',
+                        style: SRAppFonst.darkTxt),
+                    Text('Status: ${item.status}', style: SRAppFonst.darkTxt),
+                    Text('Opis: ${item.description}',
+                        style: SRAppFonst.darkTxt),
                   ],
+                ),
+                trailing: ElevatedButton(
+                  onPressed: item.status == 'Active'
+                      ? () => reserveProperty(item.id)
+                      : null,
+                  child: const Text("Rezerwuj"),
                 ),
               ),
             );
@@ -91,12 +114,14 @@ class _ApiListPageState extends State<ApiListPage> {
 }
 
 class Item {
+  final int id;
   final String name;
   final double price;
   final String status;
   final String description;
 
   Item({
+    required this.id,
     required this.name,
     required this.price,
     required this.status,
@@ -105,6 +130,7 @@ class Item {
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
+      id: json['id'],
       name: json['name'] ?? 'Brak nazwy',
       price: (json['price'] as num).toDouble(),
       status: json['status'],
