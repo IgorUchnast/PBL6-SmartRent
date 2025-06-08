@@ -1,6 +1,6 @@
 import os
-from azure.iot.hub import IoTHubRegistryManager
-from azure.iot.hub.models import CloudToDeviceMethod
+from azure.iot.hub import IoTHubRegistryManager  # type: ignore
+from azure.iot.hub.models import CloudToDeviceMethod  # type: ignore
 from flask import Flask, request, Response
 
 IOTHUB_CONNECTION_STRING = os.getenv("IOTHUB_CONNECTION_STRING")

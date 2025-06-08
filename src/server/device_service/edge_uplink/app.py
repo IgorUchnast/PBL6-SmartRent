@@ -11,7 +11,7 @@ if not EVENT_HUB_CONN_STR or not EVENT_HUB_NAME:
     raise ValueError("Missing EVENT_HUB_CONN_STR or EVENT_HUB_NAME in environment variables")
 
 def send_to_endpoint(sensor_name, value):
-    url = f"{TARGET_BASE_URL}/{sensor_name}/data"
+    url = f"{TARGET_BASE_URL}/sensors/{sensor_name}/data"
     payload = {"value": value}
     try:
         response = requests.post(url, json=payload)

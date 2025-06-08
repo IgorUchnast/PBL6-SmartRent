@@ -59,7 +59,7 @@ services:
     environment:
       - EVENT_HUB_CONN_STR=${EVENT_HUB_CONN_STR}
       - EVENT_HUB_NAME=${EVENT_HUB_NAME}
-      - TARGET_BASE_URL=http://localhost:8000/sensors
+      - TARGET_BASE_URL=http://main_service:8000
     networks:
       - default
 
